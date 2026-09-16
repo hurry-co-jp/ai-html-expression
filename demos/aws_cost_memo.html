@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>コスト増減チェック自動化 検討資料</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+  <script src="../../../Tools/aws-diagram/diagram_renderer.js"></script>
+  <style>
+    html {
+      font-size: 24px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 0.375rem;
+      height: 0.375rem;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 0.25rem;
+    }
+
+    .diagram-zoom-controls {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100/70 text-slate-800 p-4 sm:p-6 lg:p-8 min-h-screen">
+  <div class="max-w-[1200px] mx-auto space-y-7">
+
+    <!-- ドキュメントヘッダー -->
+    <header
+      class="bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2 mb-1.5">
+          <span
+            class="px-2.5 py-0.5 rounded text-xs font-bold tracking-wide uppercase bg-slate-100 text-slate-700 border border-slate-200">
+            Design Proposal
+          </span>
+          <span
+            class="px-2.5 py-0.5 rounded text-xs font-bold tracking-wide bg-amber-50 text-amber-800 border border-amber-200">
+            検討中 / チーム相談用
+          </span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+          コスト増減チェック自動化 検討資料
+        </h1>
+      </div>
+      <div
+        class="text-xs sm:text-sm text-slate-500 text-right md:border-l md:border-slate-100 md:pl-6 shrink-0 font-medium">
+        <div>作成日: 2026-09-17</div>
+      </div>
+    </header>
+
+    <!-- 1. 本日の協議事項（検討事項） -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div class="bg-slate-50/80 px-7 py-4.5 border-b border-slate-200 flex items-center justify-between">
+        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+          <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+          1. 協議事項（チーム合意が必要な論点）
+        </h2>
+        <span class="text-sm text-slate-500 font-medium">※事前に方針を決定したい項目</span>
+      </div>
+      <div class="p-7">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse table-fixed">
+            <thead>
+              <tr class="border-b border-slate-200 text-sm font-bold text-slate-600 uppercase bg-slate-50/60">
+                <th class="py-3.5 px-3 w-14 text-center">No.</th>
+                <th class="py-3.5 px-4 w-[24%]">検討項目</th>
+                <th class="py-3.5 px-5 w-[28%]">背景・課題</th>
+                <th class="py-3.5 px-5 w-[48%]">主な論点 / 検討ポイント</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              <tr>
+                <td class="py-5 px-3 text-center font-mono font-bold text-slate-400 text-base align-top">01</td>
+                <td class="py-5 px-4 font-bold text-slate-900 text-base align-top">
+                  HTMLの配置場所とアクセス制御
+                </td>
+                <td class="py-5 px-5 text-slate-600 text-base leading-relaxed align-top">
+                  コスト情報は社外秘のため、一般公開は避ける必要がある。
+                </td>
+                <td class="py-5 px-5 text-slate-800 text-base leading-relaxed align-top space-y-2">
+                  <div class="font-bold text-slate-900">手軽さと安全性のバランスをどう取るか：</div>
+                  <ul class="text-sm text-slate-600 space-y-1.5">
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                      <span><strong>S3静的ホスティング</strong>：手軽だがIP制限等の設定が必要</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                      <span><strong>社内サーバー / ポータル</strong>：アクセス管理は楽だが配置手順が必要</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                      <span><strong>各自のローカル環境</strong>：最も安全だが手元での起動が必要</span>
+                    </li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-5 px-3 text-center font-mono font-bold text-slate-400 text-base align-top">02</td>
+                <td class="py-5 px-4 font-bold text-slate-900 text-base align-top">
+                  S3データの取得方式とセキュリティ
+                </td>
+                <td class="py-5 px-5 text-slate-600 text-base leading-relaxed align-top">
+                  ブラウザからS3の非公開データを直接取得しようとするとCORSや認証が課題になる。
+                </td>
+                <td class="py-5 px-5 text-slate-800 text-base leading-relaxed align-top space-y-2">
+                  <div class="font-bold text-slate-900">メンバーの利用手順と安全性をどう両立するか：</div>
+                  <ul class="text-sm text-slate-600 space-y-1.5">
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                      <span><strong>バケットポリシーでIP制限</strong>：ブラウザから直接取得（CORS設定が必要）</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                      <span><strong>署名付きURLの発行</strong>：Lambda等で一時的なアクセス権を付与</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                      <span><strong>AWS CLI経由での取得</strong>：各自の認証情報を利用して手元に同期</span>
+                    </li>
+                  </ul>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 業務プロセスの変化（現状 vs 自動化後） -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div class="bg-slate-50/80 px-7 py-4.5 border-b border-slate-200">
+        <h2 class="text-xl font-bold text-slate-900">
+          2. 業務プロセスの変化（現状の手動作業 vs 自動化後のフロー）
+        </h2>
+      </div>
+      <div class="p-7">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-sm font-bold text-slate-600 uppercase bg-slate-50/60">
+                <th class="py-3.5 px-5 whitespace-nowrap w-44">プロセス</th>
+                <th class="py-3.5 px-5 bg-rose-50/40 text-rose-900 w-1/2">現状（課題・面倒な点）</th>
+                <th class="py-3.5 px-5 bg-sky-50/40 text-sky-900 w-1/2">自動化後（改善構想）</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="py-4.5 px-5 font-bold text-slate-800 bg-slate-50/40 text-base whitespace-nowrap">
+                  ① データ取得
+                </td>
+                <td class="py-4.5 px-5 text-slate-600 text-base leading-relaxed">
+                  気付いた担当者が都度コンソールを開いて確認（チェックが属人化・形骸化しやすい）
+                </td>
+                <td class="py-4.5 px-5 text-slate-900 text-base leading-relaxed font-medium">
+                  EventBridge により毎朝 08:00 に Cost Explorer API から日次コストを完全自動取得
+                </td>
+              </tr>
+              <tr>
+                <td class="py-4.5 px-5 font-bold text-slate-800 bg-slate-50/40 text-base whitespace-nowrap">
+                  ② 差分計算
+                </td>
+                <td class="py-4.5 px-5 text-slate-600 text-base leading-relaxed">
+                  日付フィルターを変更してCSVダウンロードし、手作業で引き算・比較集計
+                </td>
+                <td class="py-4.5 px-5 text-slate-900 text-base leading-relaxed font-medium">
+                  Lambda が前日比・前週同曜日比を自動計算し、S3 に JSON として蓄積
+                </td>
+              </tr>
+              <tr>
+                <td class="py-4.5 px-5 font-bold text-slate-800 bg-slate-50/40 text-base whitespace-nowrap">
+                  ③ 確認・共有
+                </td>
+                <td class="py-4.5 px-5 text-slate-600 text-base leading-relaxed">
+                  定着せず、月末に想定外の請求が届いて初めて消し忘れに気付くことがある
+                </td>
+                <td class="py-4.5 px-5 text-slate-900 text-base leading-relaxed font-medium">
+                  専用HTML画面を開くだけで、増減（前日差分・前週差分）が一目で確認可能
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 効果 ＆ ランニング費用 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+
+      <!-- 期待効果 -->
+      <section class="bg-white rounded-xl border border-slate-200 shadow-xs p-7 space-y-4">
+        <h2 class="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3.5">
+          3. 期待される効果
+        </h2>
+        <div class="space-y-4">
+          <div class="flex items-start gap-3.5">
+            <span
+              class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">✓</span>
+            <div>
+              <div class="font-bold text-slate-900 text-base">早期検知によるコストロス削減</div>
+              <div class="text-base text-slate-600 mt-1 leading-relaxed">
+                毎朝の確認がサッと終わるため、検証用インスタンスの消し忘れや想定外の負荷急増に当日中に気付ける。
+              </div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3.5">
+            <span
+              class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">✓</span>
+            <div>
+              <div class="font-bold text-slate-900 text-base">判断速度の向上</div>
+              <div class="text-base text-slate-600 mt-1 leading-relaxed">
+                汎用画面ではなく「自分たちが見たいサービス別の差分」だけに特化しているため、迷わず状況を把握できる。
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ランニング費用 -->
+      <section class="bg-white rounded-xl border border-slate-200 shadow-xs p-7 space-y-4">
+        <h2 class="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3.5">
+          4. ランニング費用（試算）
+        </h2>
+        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200/80 space-y-2">
+          <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">月額インフラ費用</div>
+          <div class="text-3xl font-bold text-slate-900 font-mono">約 $0.3 <span
+              class="text-base font-normal text-slate-500">/ 月</span></div>
+          <div class="text-base text-slate-600 leading-relaxed pt-1">
+            ・Cost Explorer API: 約$0.01/回（月30回で約$0.3）<br>
+            ・Lambda / S3: 無料枠〜数円レベル
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 4. 実装タスク -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-xs p-7 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3.5 gap-2">
+        <h2 class="text-xl font-bold text-slate-900">
+          5. 実装タスク
+        </h2>
+        <span class="text-sm text-slate-500 font-medium">※協議事項（論点）の決定結果に応じて変更の可能性あり</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200/80 space-y-2">
+          <div class="font-bold text-slate-900 text-base">① 画面・データ設計（最優先）</div>
+          <ul class="text-base text-slate-600 space-y-1.5 leading-relaxed">
+            <li>・差分表示HTMLのプロトタイプ作成</li>
+            <li>・最適なJSONスキーマの検討・定義</li>
+          </ul>
+        </div>
+        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200/80 space-y-2">
+          <div class="font-bold text-slate-900 text-base">② 集計処理の実装</div>
+          <ul class="text-base text-slate-600 space-y-1.5 leading-relaxed">
+            <li>・Cost Explorer API からのデータ取得</li>
+            <li>・前日比・前週比の差分計算 ＆ JSON出力</li>
+          </ul>
+        </div>
+        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200/80 space-y-2">
+          <div class="font-bold text-slate-900 text-base">③ インフラ構築・自動化</div>
+          <ul class="text-base text-slate-600 space-y-1.5 leading-relaxed">
+            <li>・IaCコード作成 ＋ デプロイ</li>
+            <li>・EventBridge / Lambda / S3 の構築</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 処理フロー構成図（Mermaid） -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-xs p-7 space-y-4">
+      <h2 class="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3.5">
+        6. 処理フロー構成（構想） - Mermaid版
+      </h2>
+      <div class="mermaid flex justify-center py-4">
+        flowchart LR
+        Timer["EventBridge<br>(毎朝08:00)"] --> Lambda["差分集計<br>Lambda"]
+        Lambda --> API["Cost Explorer<br>API"]
+        Lambda --> S3[("S3<br>(差分データ)")]
+        S3 --> Web["増減チェック<br>専用HTML"]
+      </div>
+    </section>
+
+    <!-- 6. 詳細アーキテクチャ 構成図（Canvas） -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-xs p-7 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+        <h2 class="text-xl font-bold text-slate-900">
+          7. 処理フロー構成（構想） - HTML版（Canvas）
+        </h2>
+      </div>
+
+      <!-- Canvas 構成図 ＋ スライドイン・インスペクタ領域 -->
+      <div class="relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50">
+
+        <!-- Canvas 描画エリア（通常時は幅100%） -->
+        <div class="relative w-full h-[540px] bg-white flex items-center justify-center">
+          <canvas id="aws-canvas" width="1100" height="540"
+            class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+        </div>
+
+        <!-- 右からスライドインするインスペクタ（初期は画面外・影なし） -->
+        <div id="inspector-drawer"
+          class="absolute top-0 right-0 h-full w-[380px] bg-white/95 backdrop-blur-md border-l border-slate-200 transition-all duration-300 ease-out translate-x-full z-20 flex flex-col pointer-events-none">
+          <div class="p-4 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+              <span>リソース詳細仕様</span>
+            </h3>
+            <button id="close-inspector-btn"
+              class="text-slate-400 hover:text-slate-700 p-1 rounded hover:bg-slate-200/60 transition" title="閉じる">
+              ✕
+            </button>
+          </div>
+
+          <div id="inspector-content" class="p-5 flex-1 overflow-y-auto custom-scrollbar space-y-4 text-sm">
+            <!-- 動的展開 -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // Mermaid 初期化
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      flowchart: {
+        htmlLabels: true,
+        padding: 15
+      }
+    });
+
+    // 構成図インラインデータ定義（ゆったり大きめ配置）
+    const COST_DIAGRAM_DATA = {
+      title: "AWS コスト増減チェック自動化 アーキテクチャ",
+      description: "日次コスト差分集計と専用画面による可視化フロー",
+      groups: [
+        {
+          id: "aws-cloud",
+          label: "AWS Cloud (Managed Service Layer)",
+          x: 230,
+          y: 20,
+          w: 830,
+          h: 490,
+          bgColor: "rgba(248, 250, 252, 0.85)",
+          borderColor: "rgba(203, 213, 225, 0.9)",
+          dashed: true
+        }
+      ],
+      nodes: [
+        {
+          id: "client",
+          name: "Team Client",
+          type: "Browser / Local",
+          icon: "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/General/Client.png",
+          x: 35,
+          y: 310,
+          w: 150,
+          h: 120,
+          iconSize: 68,
+          params: {
+            "種別": "ユーザー端末（ブラウザ）",
+            "閲覧方法": "専用HTML（ローカル/社内サーバー）",
+            "表示項目": "前日比・前週比の増減一覧",
+            "協議事項01": "アクセス場所（ローカル or S3静的ホスティング）の決定に依存"
+          }
+        },
+        {
+          id: "eventbridge",
+          name: "EventBridge",
+          type: "Schedule Rule",
+          icon: "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/ApplicationIntegration/EventBridge.png",
+          x: 270,
+          y: 90,
+          w: 150,
+          h: 120,
+          iconSize: 68,
+          params: {
+            "リソース名": "cost-daily-collector-rule",
+            "実行頻度": "cron(0 23 * * ? *) ※JST 08:00",
+            "ターゲット": "Lambda: CostDiffCalculator",
+            "タイムラグ考慮": "前日分コスト確定タイミングを踏まえて調整"
+          }
+        },
+        {
+          id: "lambda",
+          name: "Lambda",
+          type: "Diff Calculator",
+          icon: "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Compute/Lambda.png",
+          x: 565,
+          y: 90,
+          w: 150,
+          h: 120,
+          iconSize: 68,
+          params: {
+            "関数名": "CostDiffCalculator",
+            "Runtime": "Python 3.12",
+            "メモリ / タイムアウト": "256 MB / 30秒",
+            "IAM権限": "ce:GetCostAndUsage (最小権限付与)",
+            "出力先": "S3 (daily_cost_diff.json)"
+          }
+        },
+        {
+          id: "cost_api",
+          name: "Cost Explorer",
+          type: "AWS Billing API",
+          icon: "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/CloudFinancialManagement/CostExplorer.png",
+          x: 860,
+          y: 90,
+          w: 150,
+          h: 120,
+          iconSize: 68,
+          params: {
+            "API": "GetCostAndUsage",
+            "取得粒度": "DAILY (サービス別集計)",
+            "API費用": "約 $0.01 / 回（月額 約 $0.3）"
+          }
+        },
+        {
+          id: "s3",
+          name: "Amazon S3",
+          type: "Report Storage",
+          icon: "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Storage/SimpleStorageService.png",
+          x: 565,
+          y: 310,
+          w: 150,
+          h: 120,
+          iconSize: 68,
+          params: {
+            "バケット名": "cost-diff-reports-bucket",
+            "格納データ": "daily_cost_diff.json (最新+履歴)",
+            "ライフサイクル": "90日経過後に自動削除",
+            "協議事項02": "ブラウザからの安全な取得方式（CORS / 署名付きURL / CLI同期）"
+          }
+        }
+      ],
+      connections: [
+        {
+          from: "eventbridge",
+          to: "lambda",
+          label: "1. 毎朝起動",
+          style: "solid",
+          color: "#0284c7"
+        },
+        {
+          from: "lambda",
+          to: "cost_api",
+          label: "2. コスト照会",
+          style: "solid"
+        },
+        {
+          from: "lambda",
+          to: "s3",
+          label: "3. 差分JSON保存",
+          style: "solid"
+        },
+        {
+          from: "client",
+          to: "s3",
+          label: "4. データ取得・表示",
+          style: "dashed",
+          color: "#059669"
+        }
+      ]
+    };
+
+    // レンダラーの初期化 ＆ フォントサイズ倍増オーバーライド
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvasEl = document.getElementById('aws-canvas');
+      const inspectorEl = document.getElementById('inspector-content');
+      const drawerEl = document.getElementById('inspector-drawer');
+      const closeBtn = document.getElementById('close-inspector-btn');
+
+      if (!canvasEl || typeof AwsDiagramRenderer === 'undefined') {
+        console.warn('AwsDiagramRenderer が見つからないか、Canvasが初期化できませんでした');
+        return;
+      }
+
+      // レンダラー生成
+      const renderer = new AwsDiagramRenderer({
+        canvas: canvasEl,
+        inspector: inspectorEl
+      });
+
+      // ノード描画（文字サイズ倍増・アイコン拡大対応）
+      renderer.render = function () {
+        const rect = this.canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        this.canvas.width = rect.width * dpr;
+        this.canvas.height = rect.height * dpr;
+        this.ctx.scale(dpr, dpr);
+
+        const width = rect.width;
+        const height = rect.height;
+
+        this.ctx.clearRect(0, 0, width, height);
+
+        // 背景グリッド
+        this.ctx.fillStyle = '#f8fafc';
+        for (let x = 20; x < width; x += 30) {
+          for (let y = 20; y < height; y += 30) {
+            this.ctx.fillRect(x, y, 1.5, 1.5);
+          }
+        }
+
+        this.ctx.save();
+        this.ctx.translate(this.offsetX, this.offsetY);
+        this.ctx.scale(this.scale, this.scale);
+
+        // グループ枠
+        if (this.data.groups) {
+          for (const g of this.data.groups) {
+            this.ctx.save();
+            this._roundRect(this.ctx, g.x, g.y, g.w, g.h, 12);
+            this.ctx.fillStyle = g.bgColor || 'transparent';
+            this.ctx.fill();
+
+            this.ctx.strokeStyle = g.borderColor || '#cbd5e1';
+            this.ctx.lineWidth = 1.6;
+            this.ctx.setLineDash([6, 5]);
+            this.ctx.stroke();
+
+            if (g.label) {
+              this.ctx.setLineDash([]);
+              this.ctx.font = 'bold 22px sans-serif';
+              this.ctx.fillStyle = '#475569';
+              this.ctx.textAlign = 'left';
+              this.ctx.fillText(g.label, g.x + 18, g.y + 28);
+            }
+            this.ctx.restore();
+          }
+        }
+
+        const nodeMap = {};
+        for (const n of this.data.nodes) {
+          nodeMap[n.id] = n;
+        }
+
+        // 接続線
+        const activeNode = this._getActiveNode();
+        const activeId = activeNode ? activeNode.id : null;
+        if (this.data.connections) {
+          for (const conn of this.data.connections) {
+            const fromNode = nodeMap[conn.from];
+            const toNode = nodeMap[conn.to];
+            if (fromNode && toNode) {
+              const isRelated = activeId && (conn.from === activeId || conn.to === activeId);
+
+              this.ctx.save();
+              this.ctx.lineWidth = isRelated ? 3.2 : 2.2;
+              this.ctx.strokeStyle = isRelated ? '#0284c7' : (conn.color || '#94a3b8');
+              if (conn.style === 'dashed') this.ctx.setLineDash([6, 5]);
+
+              const fromCenterX = fromNode.x + fromNode.w / 2;
+              const fromCenterY = fromNode.y + fromNode.h / 2;
+              const toCenterX = toNode.x + toNode.w / 2;
+              const toCenterY = toNode.y + toNode.h / 2;
+
+              const dx = toCenterX - fromCenterX;
+              const dy = toCenterY - fromCenterY;
+              let fromX, fromY, toX, toY;
+
+              if (Math.abs(dx) > Math.abs(dy) * 1.3) {
+                fromX = dx >= 0 ? fromNode.x + fromNode.w : fromNode.x;
+                fromY = fromCenterY;
+                toX = dx >= 0 ? toNode.x : toNode.x + toNode.w;
+                toY = toCenterY;
+              } else {
+                fromX = fromCenterX;
+                fromY = dy >= 0 ? fromNode.y + fromNode.h : fromNode.y;
+                toX = toCenterX;
+                toY = dy >= 0 ? toNode.y : toNode.y + toNode.h;
+              }
+
+              this.ctx.beginPath();
+              this.ctx.moveTo(fromX, fromY);
+              this.ctx.lineTo(toX, toY);
+              this.ctx.stroke();
+
+              // 矢印
+              const angle = Math.atan2(toY - fromY, toX - fromX);
+              const arrowSize = 9;
+              this.ctx.setLineDash([]);
+              this.ctx.fillStyle = isRelated ? '#0284c7' : (conn.color || '#94a3b8');
+              this.ctx.beginPath();
+              this.ctx.moveTo(toX, toY);
+              this.ctx.lineTo(toX - arrowSize * 1.5 * Math.cos(angle - Math.PI / 6), toY - arrowSize * 1.5 * Math.sin(angle - Math.PI / 6));
+              this.ctx.lineTo(toX - arrowSize * 1.5 * Math.cos(angle + Math.PI / 6), toY - arrowSize * 1.5 * Math.sin(angle + Math.PI / 6));
+              this.ctx.closePath();
+              this.ctx.fill();
+
+              // ラベル（倍サイズ）
+              if (conn.label) {
+                const midX = (fromX + toX) / 2;
+                const midY = (fromY + toY) / 2;
+                this.ctx.font = isRelated ? 'bold 18px sans-serif' : 'bold 17px sans-serif';
+                const tw = this.ctx.measureText(conn.label).width;
+
+                this.ctx.fillStyle = isRelated ? '#ffffff' : '#f8fafc';
+                this.ctx.strokeStyle = isRelated ? '#0284c7' : '#cbd5e1';
+                this.ctx.lineWidth = 1.4;
+                this._roundRect(this.ctx, midX - tw / 2 - 8, midY - 13, tw + 16, 26, 6);
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                this.ctx.fillStyle = isRelated ? '#0284c7' : '#334155';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(conn.label, midX, midY);
+              }
+              this.ctx.restore();
+            }
+          }
+        }
+
+        // ノード描画（倍サイズ）
+        for (const n of this.data.nodes) {
+          this.ctx.save();
+          const w = n.w || 150;
+          const h = n.h || 120;
+          const isHover = this.hoveredNode && this.hoveredNode.id === n.id;
+          const isSelected = !this.hoveredNode && this.selectedNodeId === n.id;
+          const isActive = isHover || isSelected;
+
+          if (isActive) {
+            this._roundRect(this.ctx, n.x - 6, n.y - 6, w + 12, h + 12, 12);
+            this.ctx.fillStyle = isHover ? 'rgba(2, 132, 199, 0.08)' : 'rgba(245, 158, 11, 0.08)';
+            this.ctx.fill();
+            this.ctx.strokeStyle = isHover ? '#0284c7' : '#f59e0b';
+            this.ctx.lineWidth = 2.2;
+            this.ctx.stroke();
+          }
+
+          const iconSize = n.iconSize || 68;
+          const iconX = n.x + (w - iconSize) / 2;
+          const iconY = n.y + 4;
+
+          const iconUrl = this._resolveIconUrl(n.icon);
+          const cached = this.iconCache.get(iconUrl);
+
+          if (cached && cached.loaded && cached.img) {
+            this.ctx.drawImage(cached.img, iconX, iconY, iconSize, iconSize);
+          } else {
+            this.ctx.fillStyle = '#e2e8f0';
+            this.ctx.fillRect(iconX, iconY, iconSize, iconSize);
+          }
+
+          this.ctx.textAlign = 'center';
+          this.ctx.fillStyle = '#0f172a';
+          this.ctx.font = isSelected ? 'bold 24px sans-serif' : 'bold 22px sans-serif';
+
+          const labelY = iconY + iconSize + 22;
+          this.ctx.fillText(n.name, n.x + w / 2, labelY);
+
+          if (n.type) {
+            this.ctx.fillStyle = '#64748b';
+            this.ctx.font = '18px sans-serif';
+            this.ctx.fillText(n.type, n.x + w / 2, labelY + 24);
+          }
+
+          this.ctx.restore();
+        }
+
+        this.ctx.restore();
+      };
+
+      // 閉じるボタン
+      if (closeBtn && drawerEl) {
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          drawerEl.classList.add('translate-x-full', 'pointer-events-none');
+          drawerEl.classList.remove('shadow-2xl');
+          renderer.selectedNodeId = null;
+          renderer.render();
+        });
+      }
+
+      // キャンバスクリックでノードが選択されたらドロワーを開く
+      canvasEl.addEventListener('click', () => {
+        if (renderer.selectedNodeId && drawerEl) {
+          drawerEl.classList.remove('translate-x-full', 'pointer-events-none');
+          drawerEl.classList.add('shadow-2xl');
+        }
+      });
+
+      // データを読み込んで描画（初期は選択なしで全体表示）
+      renderer.setData(COST_DIAGRAM_DATA, null);
+      renderer.selectedNodeId = null;
+      renderer.render();
+    });
+  </script>
+</body>
+
+</html>

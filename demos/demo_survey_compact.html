@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>作例② Formsアンケート可視化ダッシュボード（デモ）</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      font-size: 16px;
+      line-height: 1.5;
+      padding: 10px 14px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ヘッダーカード */
+    .header-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-title-group h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+
+    .header-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 13.5px;
+      color: #64748b;
+      margin-top: 3px;
+    }
+
+    .kpi-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .kpi-badge {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 6px 16px;
+      border-radius: 8px;
+      text-align: right;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: #4f46e5;
+      font-feature-settings: "tnum";
+    }
+
+    /* タブ切り替えバー */
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      padding: 8px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #64748b;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .tab-btn.active {
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #4f46e5;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+    }
+
+    /* セクション共通カード */
+    .section-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-size: 16.5px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 1. 生データテーブル表示 */
+    #raw-view {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: #f8fafc;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .filter-input {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+      min-width: 280px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+      max-height: 520px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14.5px;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      font-size: 14px;
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .score-badge {
+      display: inline-block;
+      width: 26px;
+      height: 26px;
+      line-height: 26px;
+      text-align: center;
+      background: #e0e7ff;
+      color: #4338ca;
+      font-weight: 800;
+      border-radius: 6px;
+      font-size: 13.5px;
+    }
+
+    /* 2. ダッシュボード表示 */
+    #dashboard-view {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ドーナツチャート */
+    .donut-layout {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 4px 0;
+    }
+
+    .donut-svg {
+      width: 140px;
+      height: 140px;
+      transform: rotate(-90deg);
+      flex-shrink: 0;
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14.5px;
+    }
+
+    .legend-bullet {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    /* リッカート尺度バー */
+    .likert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .likert-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .likert-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14.5px;
+      font-weight: 600;
+    }
+
+    .likert-bar-container {
+      display: flex;
+      height: 26px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f1f5f9;
+    }
+
+    .likert-seg {
+      height: 100%;
+    }
+
+    /* AI要約と戒めの注意書きバナー */
+    .ai-summary-banner {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ai-warning-box {
+      background: #fff1f2;
+      border: 1.5px solid #fecdd3;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 15px;
+      color: #9f1239;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .ai-takeaways {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ai-takeaways li {
+      position: relative;
+      padding-left: 20px;
+      font-size: 14.5px;
+      color: #334155;
+    }
+
+    .ai-takeaways li::before {
+      content: "✔";
+      position: absolute;
+      left: 0;
+      color: #4f46e5;
+      font-weight: bold;
+    }
+
+    /* コメント一覧 */
+    .comment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .comment-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .comment-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13.5px;
+    }
+
+    .comment-role {
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .sentiment-tag {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .sentiment-pos {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    .sentiment-sug {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+
+    .comment-text {
+      font-size: 15px;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+
+    /* 3. 元データJSONビュー */
+    #json-view {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .json-code-container {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14.5px;
+      line-height: 1.6;
+      max-height: 520px;
+      overflow: auto;
+      border: 1px solid #334155;
+      position: relative;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- ヘッダー -->
+    <header class="header-card">
+      <div class="header-title-group">
+        <h1>第12回 社内技術勉強会（LT大会） アンケート結果</h1>
+        <div class="header-meta">
+          <span>📅 2026年8月実施</span>
+          <span>👥 対象: 全社エンジニア・企画メンバー</span>
+        </div>
+      </div>
+      <div class="kpi-group">
+        <div class="kpi-badge">
+          <div class="kpi-label">回答数</div>
+          <div class="kpi-value">68 名</div>
+        </div>
+        <div class="kpi-badge">
+          <div class="kpi-label">回答率</div>
+          <div class="kpi-value" style="color: #10b981;">89.5 %</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- タブ切り替えボタン -->
+    <div class="tab-bar">
+      <button id="btn-dashboard" class="tab-btn active">
+        <span>📊</span> 集計ダッシュボード
+      </button>
+      <button id="btn-raw" class="tab-btn">
+        <span>📋</span> 回答データ一覧
+      </button>
+      <button id="btn-json" class="tab-btn">
+        <span>📜</span> 元データ (JSON)
+      </button>
+    </div>
+
+    <!-- 1. 集計ダッシュボード表示 -->
+    <div id="dashboard-view">
+      <!-- 上段2カラム：ドーナツ ＆ 満足度バー -->
+      <div class="grid-2col">
+        <!-- 設問1: ドーナツ -->
+        <div class="section-card">
+          <div class="section-title">設問1: 当日の参加形態</div>
+          <div class="donut-layout">
+            <svg class="donut-svg" viewBox="0 0 42 42">
+              <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#e2e8f0" stroke-width="5"></circle>
+              <!-- オンライン 42/68 = 61.8% -->
+              <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4f46e5" stroke-width="5" stroke-dasharray="61.8 38.2" stroke-dashoffset="0"></circle>
+              <!-- 現地 18/68 = 26.5% -->
+              <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#10b981" stroke-width="5" stroke-dasharray="26.5 73.5" stroke-dashoffset="-61.8"></circle>
+              <!-- アーカイブ 8/68 = 11.7% -->
+              <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#94a3b8" stroke-width="5" stroke-dasharray="11.7 88.3" stroke-dashoffset="-88.3"></circle>
+            </svg>
+            <div class="donut-legend">
+              <div class="legend-item">
+                <span><span class="legend-bullet" style="background:#4f46e5;"></span>オンライン（配信）</span>
+                <strong>42名 (61.8%)</strong>
+              </div>
+              <div class="legend-item">
+                <span><span class="legend-bullet" style="background:#10b981;"></span>現地リアル会場</span>
+                <strong>18名 (26.5%)</strong>
+              </div>
+              <div class="legend-item">
+                <span><span class="legend-bullet" style="background:#94a3b8;"></span>後日アーカイブ視聴</span>
+                <strong>8名 (11.7%)</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 設問2: 満足度バー -->
+        <div class="section-card">
+          <div class="section-title">設問2: 勉強会満足度 ＆ 実務役立ち度</div>
+          <div class="likert-list">
+            <div class="likert-item">
+              <div class="likert-header">
+                <span>総合満足度</span>
+                <span style="color:#4f46e5;">平均 4.6 / 5.0</span>
+              </div>
+              <div class="likert-bar-container">
+                <div class="likert-seg" style="width: 66.2%; background: #15803d;" title="5: 大変満足 45名"></div>
+                <div class="likert-seg" style="width: 27.9%; background: #22c55e;" title="4: 満足 19名"></div>
+                <div class="likert-seg" style="width: 4.4%; background: #94a3b8;" title="3: 普通 3名"></div>
+                <div class="likert-seg" style="width: 1.5%; background: #f97316;" title="2: 不満 1名"></div>
+              </div>
+            </div>
+
+            <div class="likert-item">
+              <div class="likert-header">
+                <span>実務・業務への役立ち度</span>
+                <span style="color:#4f46e5;">平均 4.3 / 5.0</span>
+              </div>
+              <div class="likert-bar-container">
+                <div class="likert-seg" style="width: 47.1%; background: #15803d;" title="5: 大変役立つ 32名"></div>
+                <div class="likert-seg" style="width: 41.2%; background: #22c55e;" title="4: 役立つ 28名"></div>
+                <div class="likert-seg" style="width: 8.8%; background: #94a3b8;" title="3: どちらとも言えない 6名"></div>
+                <div class="likert-seg" style="width: 2.9%; background: #f97316;" title="2: あまり役立たない 2名"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 下段：要約インサイト ＆ 自由記述コメント抜粋 -->
+      <div class="section-card">
+        <!-- 全体傾向インサイト -->
+        <div class="ai-summary-banner">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px;">📌</span>
+              <strong style="color: #0f172a; font-size: 15px;">全体傾向インサイト</strong>
+            </div>
+            <span style="color: #15803d; font-weight: 800; font-size: 13.5px;">好意度: 約 88%</span>
+          </div>
+
+          <ul class="ai-takeaways">
+            <li>「スライドだけでなく実際の動く画面を見ることで理解が深まった」というライブデモ形式への好評が多数</li>
+            <li>HTML単体で動作するOTPツールやExcelビューワーなど「ローカル完結型ツール」の実用性に強い関心</li>
+            <li>運営面において「質疑応答の時間をあらかじめ確保してほしい」という改善要望</li>
+          </ul>
+        </div>
+
+        <!-- コメント抜粋 -->
+        <div class="comment-list">
+          <div class="comment-item">
+            <div class="comment-meta">
+              <span class="comment-role">フロントエンド開発（現地会場）</span>
+              <span class="sentiment-tag sentiment-pos">好評・実用性</span>
+            </div>
+            <p class="comment-text">HTMLとWeb Cryptoだけで動くOTPツールやExcelビューワーのデモがとても実用的で面白かったです！</p>
+          </div>
+
+          <div class="comment-item">
+            <div class="comment-meta">
+              <span class="comment-role">バックエンド開発（オンライン）</span>
+              <span class="sentiment-tag sentiment-pos">理解度・デモ形式</span>
+            </div>
+            <p class="comment-text">スライド資料だけでなく、実際にブラウザ上で動く画面を見せてもらえると理解度が段違いでした。</p>
+          </div>
+
+          <div class="comment-item">
+            <div class="comment-meta">
+              <span class="comment-role">QA/テスト自動化（オンライン）</span>
+              <span class="sentiment-tag sentiment-sug">改善要望・進行</span>
+            </div>
+            <p class="comment-text">最後の質疑応答の時間が短かったので、もう少しQAディスカッションの時間があらかじめ取られていると嬉しいです。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 全回答生データテーブル表示 -->
+    <div id="raw-view">
+      <div class="section-card">
+        <div class="section-title">
+          <span>全回答データ一覧</span>
+          <span style="font-size: 11px; color: #64748b; font-weight: normal;">※手元のJSONデータからリアルタイム描画</span>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="filter-search" class="filter-input" placeholder="🔍 キーワード検索（職種、コメント内容など）...">
+          <span id="record-count" style="font-size: 12px; font-weight: bold; color: #4f46e5;">全 8 件中 8 件表示</span>
+        </div>
+
+        <div class="table-container">
+          <table id="survey-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>職種・担当</th>
+                <th>参加形態</th>
+                <th>総合満足度</th>
+                <th>実務役立ち度</th>
+                <th>自由記述コメント</th>
+              </tr>
+            </thead>
+            <tbody id="survey-tbody">
+              <!-- JSで動的描画 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 元データJSONビュー -->
+    <div id="json-view">
+      <div class="section-card">
+        <div class="section-title">
+          <span>アンケート元データ (JSON)</span>
+          <span style="font-size: 11px; color: #64748b; font-weight: normal;">※集計・グラフ・要約の基底となる構造化データ</span>
+        </div>
+        <div class="json-code-container">
+          <button id="btn-copy-json" class="copy-btn">📋 JSONをコピー</button>
+          <pre id="json-code"></pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 全回答生データ JSON
+    const SURVEY_RAW_DATA = [
+      {
+        id: "R001",
+        role: "フロントエンド開発",
+        mode: "現地リアル会場",
+        scoreTotal: 5,
+        scorePractical: 5,
+        comment: "HTMLとWeb Cryptoだけで動くOTPツールやExcelビューワーのデモがとても実用的で面白かったです！"
+      },
+      {
+        id: "R002",
+        role: "バックエンド開発",
+        mode: "オンライン",
+        scoreTotal: 5,
+        scorePractical: 4,
+        comment: "スライド資料だけでなく、実際にブラウザ上で動く画面を見せてもらえると理解度が段違いでした。"
+      },
+      {
+        id: "R003",
+        role: "インフラ基盤",
+        mode: "オンライン",
+        scoreTotal: 4,
+        scorePractical: 4,
+        comment: "外部通信なしでローカル完結するWebツールのアイデアは、セキュリティ厳しい案件でも真似したいです。"
+      },
+      {
+        id: "R004",
+        role: "プロダクト企画/PM",
+        mode: "現地リアル会場",
+        scoreTotal: 5,
+        scorePractical: 4,
+        comment: "非エンジニアでもブラウザで開くだけで使えるのはとても魅力的。業務改善メモの作り方はチームで共有します！"
+      },
+      {
+        id: "R005",
+        role: "QA/テスト自動化",
+        mode: "オンライン",
+        scoreTotal: 4,
+        scorePractical: 3,
+        comment: "最後の質疑応答の時間が短かったので、もう少しQAディスカッションの時間があらかじめ取られていると嬉しいです。"
+      },
+      {
+        id: "R006",
+        role: "データサイエンス",
+        mode: "オンライン",
+        scoreTotal: 5,
+        scorePractical: 5,
+        comment: "Pythonのノートブックで作った分析結果をHTMLレポートとして配布するヒントが得られました。"
+      },
+      {
+        id: "R007",
+        role: "セキュリティ担当",
+        mode: "現地リアル会場",
+        scoreTotal: 4,
+        scorePractical: 5,
+        comment: "外部CDNに頼らずセキュアに単一ファイルで完結させる設計指針に非常に納得感がありました。"
+      },
+      {
+        id: "R008",
+        role: "新人研修生",
+        mode: "オンライン",
+        scoreTotal: 5,
+        scorePractical: 4,
+        comment: "Web標準技術の奥深さを知ることができました。自分でも社内向けミニツールを作ってみます！"
+      }
+    ];
+
+    // タブ制御
+    const btnDashboard = document.getElementById('btn-dashboard');
+    const btnRaw = document.getElementById('btn-raw');
+    const btnJson = document.getElementById('btn-json');
+
+    const dashboardView = document.getElementById('dashboard-view');
+    const rawView = document.getElementById('raw-view');
+    const jsonView = document.getElementById('json-view');
+
+    function switchTab(viewName) {
+      btnDashboard.classList.toggle('active', viewName === 'dashboard');
+      btnRaw.classList.toggle('active', viewName === 'raw');
+      btnJson.classList.toggle('active', viewName === 'json');
+
+      dashboardView.style.display = viewName === 'dashboard' ? 'flex' : 'none';
+      rawView.style.display = viewName === 'raw' ? 'flex' : 'none';
+      jsonView.style.display = viewName === 'json' ? 'flex' : 'none';
+    }
+
+    btnDashboard.addEventListener('click', () => switchTab('dashboard'));
+    btnRaw.addEventListener('click', () => switchTab('raw'));
+    btnJson.addEventListener('click', () => switchTab('json'));
+
+    // テーブルレンダリング
+    const tbody = document.getElementById('survey-tbody');
+    const recordCountEl = document.getElementById('record-count');
+    const searchInput = document.getElementById('filter-search');
+
+    function renderTable(data) {
+      tbody.innerHTML = '';
+      data.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${item.id}</b></td>
+          <td>${item.role}</td>
+          <td>${item.mode}</td>
+          <td><span class="score-badge">${item.scoreTotal}</span></td>
+          <td><span class="score-badge">${item.scorePractical}</span></td>
+          <td style="color:#0f172a; font-weight:500;">${item.comment}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      recordCountEl.innerText = `全 ${SURVEY_RAW_DATA.length} 件中 ${data.length} 件表示`;
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = SURVEY_RAW_DATA.filter(item => {
+        return item.role.toLowerCase().includes(q) ||
+               item.mode.toLowerCase().includes(q) ||
+               item.comment.toLowerCase().includes(q) ||
+               item.id.toLowerCase().includes(q);
+      });
+      renderTable(filtered);
+    });
+
+    renderTable(SURVEY_RAW_DATA);
+
+    // JSONレンダリング
+    const jsonCode = document.getElementById('json-code');
+    jsonCode.textContent = JSON.stringify(SURVEY_RAW_DATA, null, 2);
+
+    document.getElementById('btn-copy-json').addEventListener('click', () => {
+      navigator.clipboard.writeText(JSON.stringify(SURVEY_RAW_DATA, null, 2)).then(() => {
+        const btn = document.getElementById('btn-copy-json');
+        btn.innerText = '✅ コピー完了！';
+        setTimeout(() => btn.innerText = '📋 JSONをコピー', 2000);
+      });
+    });
+  </script>
+</body>
+
+</html>

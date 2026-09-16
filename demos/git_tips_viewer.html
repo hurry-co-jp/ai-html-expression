@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Git操作メモ ⇄ 構造化HTMLリファレンス</title>
+  <style>
+    html {
+      font-size: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ヘッダーバー */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 3.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .title-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    header h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.4rem;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      text-decoration: none;
+    }
+
+    .toggle-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    /* メインコンテンツ（2分割） */
+    .container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 3.5rem);
+      overflow: hidden;
+    }
+
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .panel-left {
+      border-right: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .panel-right {
+      background: #ffffff;
+    }
+
+    .panel-header {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      background: #f8fafc;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .panel-left .panel-header {
+      background: #f1f5f9;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    /* 左側：エディタ風Markdown表示 (ライトモード・P6準拠) */
+    .editor-wrapper {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #334155;
+      counter-reset: line;
+    }
+
+    .editor-line {
+      display: flex;
+    }
+
+    .editor-line::before {
+      counter-increment: line;
+      content: counter(line);
+      display: inline-block;
+      width: 2.5rem;
+      padding-right: 1rem;
+      text-align: right;
+      color: #94a3b8;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .editor-text {
+      flex: 1;
+    }
+
+    .syntax-heading { color: #0284c7; font-weight: bold; }
+    .syntax-list { color: #e11d48; }
+    .syntax-code { color: #2563eb; }
+    .syntax-bold { color: #d97706; font-weight: bold; }
+
+    .loading-state {
+      color: #64748b;
+      font-size: 0.8125rem;
+      padding: 1.25rem;
+    }
+
+    /* 右側 HTML表示用 iframe */
+    .iframe-body {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* 単一表示モード（HTMLのみ中央表示） */
+    .container.single-html-mode .panel-left {
+      display: none;
+    }
+    .container.single-html-mode .panel-right {
+      flex: 1;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-area">
+      <h1>Git操作メモ ⇄ 構造化HTMLリファレンス</h1>
+    </div>
+    <div class="actions">
+      <button id="toggle-view-btn" class="toggle-btn" onclick="toggleSingleView()">
+        <span class="btn-icon">📄</span>
+        <span class="btn-text">HTMLのみ中央表示</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 左パネル: 生のMarkdownメモ -->
+    <section class="panel panel-left">
+      <div class="panel-header">
+        <span>📝 原文メモ (git-tips.md)</span>
+      </div>
+      <div class="panel-body">
+        <div class="editor-wrapper" id="editor">
+          <div class="loading-state">読み込んでいます...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右パネル: AIが構造化したHTMLリファレンス -->
+    <section class="panel panel-right">
+      <div class="panel-header">
+        <span>🎨 AI構造化HTML (git-tips.html)</span>
+      </div>
+      <iframe src="./git-tips.html" class="iframe-body" title="AI構造化HTMLリファレンス"></iframe>
+    </section>
+  </main>
+
+  <script>
+    // git-tips.md を非同期取得して左側に表示
+    async function loadMarkdown() {
+      try {
+        const res = await fetch('./git-tips.md');
+        if (res.ok) {
+          const text = await res.text();
+          renderLeftEditor(text);
+        } else {
+          document.getElementById('editor').innerHTML = '<div class="loading-state">git-tips.md の取得に失敗しました。</div>';
+        }
+      } catch (e) {
+        document.getElementById('editor').innerHTML = '<div class="loading-state">git-tips.md を読み込めませんでした: ' + escapeHtml(e.message) + '</div>';
+      }
+    }
+
+    // 左側：エディタ風テキスト表示（行番号＆構文強調）
+    function renderLeftEditor(text) {
+      const editorEl = document.getElementById('editor');
+      const lines = text.split('\n');
+      
+      const html = lines.map(line => {
+        let escaped = escapeHtml(line);
+        if (escaped.startsWith('# ') || escaped.startsWith('## ') || escaped.startsWith('### ')) {
+          escaped = `<span class="syntax-heading">${escaped}</span>`;
+        } else if (escaped.trim().startsWith('- ')) {
+          escaped = escaped.replace('- ', '<span class="syntax-list">- </span>');
+        } else if (escaped.startsWith('```')) {
+          escaped = `<span class="syntax-code">${escaped}</span>`;
+        }
+        escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<span class="syntax-bold">**$1**</span>');
+        
+        return `<div class="editor-line"><span class="editor-text">${escaped || ' '}</span></div>`;
+      }).join('');
+
+      editorEl.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // 表示モード切り替え（2分割 ⇄ HTML単体）
+    function toggleSingleView() {
+      const container = document.querySelector('.container');
+      const btn = document.getElementById('toggle-view-btn');
+      const isSingle = container.classList.toggle('single-html-mode');
+
+      if (isSingle) {
+        btn.innerHTML = '<span class="btn-icon">⇄</span><span class="btn-text">2画面比較に戻す</span>';
+      } else {
+        btn.innerHTML = '<span class="btn-icon">📄</span><span class="btn-text">HTMLのみ中央表示</span>';
+      }
+    }
+
+    loadMarkdown();
+  </script>
+</body>
+</html>

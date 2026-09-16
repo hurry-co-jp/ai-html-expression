@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>紹介するデモラインナップ</title>
+  <link rel="stylesheet" href="../theme/slide_theme.css">
+  <script src="../theme/slide_theme.js" defer></script>
+  <style>
+    .slide-content {
+      padding: 2rem 5rem !important;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.5rem;
+      overflow: hidden;
+    }
+
+    .list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      width: 100%;
+    }
+
+    .showcase-item-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 0.9rem;
+      padding: 0.95rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+      transition: all 0.15s ease-in-out;
+    }
+
+    .item-num {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #0284c7;
+      font-feature-settings: "tnum";
+      min-width: 2.5rem;
+    }
+
+    .item-title {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+
+    .diff-badge {
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0.3rem 1.0rem;
+      border-radius: 9999px;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+      margin-left: 0.25rem;
+    }
+
+    .badge-super-easy {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1.5px solid #a7f3d0;
+    }
+
+    .badge-normal {
+      background: #f0f9ff;
+      color: #0284c7;
+      border: 1.5px solid #bae6fd;
+    }
+
+    .badge-easy {
+      background: #f0fdf4;
+      color: #059669;
+      border: 1.5px solid #bbf7d0;
+    }
+
+    .badge-hard {
+      background: #fffbeb;
+      color: #d97706;
+      border: 1.5px solid #fde68a;
+    }
+
+    .badge-very-hard {
+      background: #fff1f2;
+      color: #e11d48;
+      border: 1.5px solid #fecdd3;
+    }
+
+    .demo-notice-bar {
+      margin-top: 0.6rem;
+      background: #f8fafc;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 0.85rem;
+      padding: 0.85rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+    }
+
+    .notice-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .notice-text {
+      font-size: 1.35rem;
+      color: #334155;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .notice-text strong {
+      color: #0284c7;
+      font-weight: 800;
+      font-size: 1.45rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <h1>紹介するデモラインナップ</h1>
+      <div class="slide-logo"></div>
+    </header>
+
+    <main class="slide-content">
+      <div class="list-container">
+        <div class="showcase-item-card">
+          <span class="item-num">①</span>
+          <span class="item-title">Git操作メモのHTML化</span>
+          <span class="diff-badge badge-super-easy">超簡単</span>
+        </div>
+
+        <div class="showcase-item-card">
+          <span class="item-num">②</span>
+          <span class="item-title">Gitシミュレーター</span>
+          <span class="diff-badge badge-normal">普通</span>
+        </div>
+
+        <div class="showcase-item-card">
+          <span class="item-num">③</span>
+          <span class="item-title">Formsで集計したアンケートの可視化</span>
+          <span class="diff-badge badge-easy">簡単</span>
+        </div>
+
+        <div class="showcase-item-card">
+          <span class="item-num">④</span>
+          <span class="item-title">ガントチャート</span>
+          <span class="diff-badge badge-hard">難しい</span>
+        </div>
+
+        <div class="showcase-item-card">
+          <span class="item-num">⑤</span>
+          <span class="item-title">AWSの構成図</span>
+          <span class="diff-badge badge-very-hard">だいぶ難しい</span>
+        </div>
+      </div>
+      <div class="demo-notice-bar">
+        <span class="notice-text">※ <strong>1つ1分以内</strong>を目安にざっくりと紹介していきます</span>
+      </div>
+    </main>
+
+    <footer class="slide-footer"></footer>
+  </div>
+</body>
+
+</html>

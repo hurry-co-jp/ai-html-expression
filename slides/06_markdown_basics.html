@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>そもそもMarkdownとは？</title>
+  <link rel="stylesheet" href="../theme/slide_theme.css">
+  <script src="../theme/slide_theme.js" defer></script>
+  <script src="../theme/canvas_theme.js"></script>
+  <style>
+    .slide-content {
+      padding: 0 !important;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      position: relative;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <h1>そもそもMarkdownとは？</h1>
+      <div class="slide-logo"></div>
+    </header>
+
+    <main class="slide-content">
+      <canvas id="slide-canvas"></canvas>
+    </main>
+
+    <footer class="slide-footer"></footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('slide-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 共通レイアウト規格（theme/canvas_theme.js）から展開
+    const { SLIDE_WIDTH, SLIDE_HEIGHT, HEADER_HEIGHT, FOOTER_HEIGHT, CONTENT_WIDTH, CONTENT_HEIGHT } = window.CANVAS_LAYOUT;
+
+    // Tabler Icons (SVG Path2D)
+    const iconFileText = new Path2D(
+      "M14 3v4a1 1 0 0 0 1 1h4 M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z M9 9h1 M9 13h6 M9 17h6"
+    );
+    const iconMarkdown = new Path2D(
+      "M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z M7 15v-6l2 2l2 -2v6 M14 13l2 2l2 -2 M16 9v6"
+    );
+    const iconFileCode = new Path2D(
+      "M14 3v4a1 1 0 0 0 1 1h4 M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z M10 13l-1.5 2l1.5 2 M14 13l1.5 2l-1.5 2"
+    );
+
+    function drawContent(ctx, baseWidth, baseHeight) {
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, baseWidth, baseHeight);
+
+      // 上部メッセージ枠（ヘッダー下からの余白）
+      const msgX = 60;
+      const msgY = 30;
+      const msgW = baseWidth - 120;
+      const msgH = 110;
+
+      ctx.fillStyle = '#f0f9ff';
+      ctx.beginPath();
+      ctx.roundRect(msgX, msgY, msgW, msgH, 16);
+      ctx.fill();
+
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.font = 'bold 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#0f172a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Markdown ＝ 「HTMLを簡易的な記法で書けるフォーマット」', baseWidth / 2, msgY + msgH / 2);
+
+      // 3カラム配置
+      const colW = 560;
+      const colH = 680;
+      const colY = 170;
+      const startX = 60;
+      const gap = (baseWidth - 120 - (colW * 3)) / 2;
+
+      // カラム 1: TXT
+      drawCol(ctx, startX, colY, colW, colH, 'TXT', iconFileText, 'plain');
+
+      // 矢印 1 (サイズ・スタイルを固定)
+      drawArrow(ctx, startX + colW + gap / 2, colY + colH / 2);
+
+      // カラム 2: MD
+      drawCol(ctx, startX + colW + gap, colY, colW, colH, 'MD', iconMarkdown, 'markdown');
+
+      // 矢印 2 (矢印1と完全に同一)
+      drawArrow(ctx, startX + (colW * 2) + gap * 1.5, colY + colH / 2);
+
+      // カラム 3: HTML
+      drawCol(ctx, startX + (colW + gap) * 2, colY, colW, colH, 'HTML', iconFileCode, 'html');
+    }
+
+    function drawArrow(ctx, x, y) {
+      ctx.save();
+      ctx.font = 'bold 52px sans-serif';
+      ctx.fillStyle = '#0284c7';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('➔', x, y);
+      ctx.restore();
+    }
+
+    function drawCol(ctx, x, y, w, h, colTitle, iconPath, type) {
+      ctx.save();
+
+      ctx.shadowColor = 'rgba(15, 23, 42, 0.04)';
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 7;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 20);
+      ctx.fill();
+
+      ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = type === 'markdown' ? '#0284c7' : '#e2e8f0';
+      ctx.lineWidth = type === 'markdown' ? 3 : 1.8;
+      ctx.stroke();
+
+      // Tabler Icon ベクター描画
+      ctx.save();
+      ctx.translate(x + 28, y + 22);
+      ctx.scale(1.8, 1.8);
+      ctx.lineWidth = 1.8;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = type === 'markdown' ? '#0284c7' : '#475569';
+      ctx.stroke(iconPath);
+      ctx.restore();
+
+      // カラムヘッダーテキスト
+      ctx.font = 'bold 34px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = type === 'markdown' ? '#0284c7' : '#0f172a';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(colTitle, x + 84, y + 24);
+
+      // 下線
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x + 28, y + 84);
+      ctx.lineTo(x + w - 28, y + 84);
+      ctx.stroke();
+
+      // カード内部の描画エリア
+      const boxY = y + 106;
+      const boxH = h - 136;
+
+      ctx.fillStyle = type === 'markdown' ? '#f0f9ff' : '#f8fafc';
+      ctx.beginPath();
+      ctx.roundRect(x + 24, boxY, w - 48, boxH, 14);
+      ctx.fill();
+
+      ctx.strokeStyle = type === 'markdown' ? '#7dd3fc' : '#cbd5e1';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      const innerX = x + 38;
+
+      if (type === 'plain') {
+        ctx.font = '24px monospace';
+        ctx.fillStyle = '#334155';
+        ctx.fillText('AWSコスト自動集計の検討案', innerX, boxY + 40);
+
+        let ly = boxY + 120;
+        ctx.fillText('・EventBridgeで毎朝Lambdaを自動起動', innerX, ly);
+        ctx.fillText('・Cost Explorerから前日比の差分を取得', innerX, ly + 52);
+        ctx.fillText('・S3に保存して専用HTMLで一覧表示', innerX, ly + 104);
+
+        const btmY = ly + 185;
+        wrapText(ctx, '相談事項：情報のアクセス制限とセキュリティについて確認したい', innerX, btmY, w - 76, 38);
+
+      } else if (type === 'markdown') {
+        ctx.font = 'bold 28px monospace';
+        ctx.fillStyle = '#0284c7';
+        ctx.fillText('# AWSコスト自動集計の検討案', innerX, boxY + 40);
+
+        let ly = boxY + 120;
+        ctx.font = '25px monospace';
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText('- EventBridgeで毎朝Lambdaを自動起動', innerX, ly);
+        ctx.fillText('- Cost Explorerから前日比の差分を取得', innerX, ly + 52);
+        ctx.fillText('- S3に保存して専用HTMLで一覧表示', innerX, ly + 104);
+
+        const mBtmY = ly + 185;
+        ctx.font = '23px monospace';
+        ctx.fillStyle = '#0284c7';
+        ctx.fillText('相談事項：情報の', innerX, mBtmY);
+        ctx.fillText('**アクセス制限とセキュリティ**', innerX, mBtmY + 38);
+        ctx.fillText('について確認したい', innerX, mBtmY + 76);
+
+      } else if (type === 'html') {
+        // 生のHTMLコード
+        ctx.font = 'bold 24px monospace';
+        ctx.fillStyle = '#1e293b';
+        ctx.fillText('<h1>AWSコスト自動集計の検討案</h1>', innerX, boxY + 40);
+
+        let ly = boxY + 115;
+        ctx.font = '21px monospace';
+        ctx.fillStyle = '#334155';
+        ctx.fillText('<ul>', innerX, ly);
+        ctx.fillText('  <li>EventBridgeで毎朝Lambdaを自動起動</li>', innerX, ly + 38);
+        ctx.fillText('  <li>Cost Explorerから前日比の差分を取得</li>', innerX, ly + 76);
+        ctx.fillText('  <li>S3に保存して専用HTMLで一覧表示</li>', innerX, ly + 114);
+        ctx.fillText('</ul>', innerX, ly + 152);
+
+        const hBtmY = ly + 215;
+        ctx.fillText('<p>相談事項：情報の', innerX, hBtmY);
+        ctx.fillText('  <strong>アクセス制限とセキュリティ</strong>', innerX, hBtmY + 38);
+        ctx.fillText('  について確認したい</p>', innerX, hBtmY + 76);
+      }
+
+      ctx.restore();
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split('');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n];
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n];
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+    }
+
+    function render() {
+      const container = canvas.parentElement;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (!width || !height) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+
+      ctx.scale(dpr, dpr);
+
+      // メインエリア基準サイズ（1920 × 900）に対するスケーリング比率
+      const scaleX = width / CONTENT_WIDTH;
+      const scaleY = height / CONTENT_HEIGHT;
+      const scale = Math.min(scaleX, scaleY);
+
+      const offsetX = (width - CONTENT_WIDTH * scale) / 2;
+      const offsetY = (height - CONTENT_HEIGHT * scale) / 2;
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+
+      drawContent(ctx, CONTENT_WIDTH, CONTENT_HEIGHT);
+
+      ctx.restore();
+    }
+
+    window.addEventListener('resize', render);
+    window.addEventListener('load', render);
+  </script>
+</body>
+</html>

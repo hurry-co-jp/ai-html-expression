@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スライドプレゼンテーション</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* プレゼンフレーム */
+    main {
+      flex: 1;
+      position: relative;
+      background: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    iframe#slide-viewport {
+      width: 1920px;
+      height: 1080px;
+      border: none;
+      background: #ffffff;
+      transform-origin: center center;
+      flex-shrink: 0;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    /* コントロールバー（下部） */
+    footer {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(226, 232, 240, 0.9);
+      height: 3.5rem;
+      padding: 0 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 30;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    /* フルスクリーン時の完全非表示 */
+    :fullscreen footer,
+    :-webkit-full-screen footer {
+      display: none !important;
+    }
+
+    :fullscreen .drawer,
+    :-webkit-full-screen .drawer {
+      bottom: 0 !important;
+      height: 100% !important;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      background: #ffffff;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      padding: 0.4rem 0.875rem;
+      border-radius: 0.375rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      user-select: none;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .btn:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .counter {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #64748b;
+      min-width: 5rem;
+      text-align: center;
+    }
+
+    /* プログレスバー */
+    .progress-bar-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: #e2e8f0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #0284c7;
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    /* 目次ドロワー（半透明すりガラス調） */
+    .drawer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 22rem;
+      bottom: 3.5rem;
+      height: calc(100% - 3.5rem);
+      background: rgba(255, 255, 255, 0.84);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid rgba(203, 213, 225, 0.8);
+      z-index: 20;
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 6px 0 24px rgba(0, 0, 0, 0.07);
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer h3 {
+      font-size: 1rem;
+      color: #0284c7;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    .slide-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding-right: 0.25rem;
+    }
+
+    .slide-list::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .slide-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .slide-list::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .slide-item {
+      padding: 0.625rem 0.875rem;
+      border-radius: 0.375rem;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      font-size: 0.8125rem;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+
+    .slide-item:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      color: #0f172a;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .slide-item.active {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: #ffffff;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+    }
+
+    .demo-badge {
+      background: #f0f9ff;
+      color: #0284c7;
+      font-size: 0.6875rem;
+      font-weight: 800;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.25rem;
+      border: 1px solid #bae6fd;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    .slide-item.active .demo-badge {
+      background: #0369a1;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+
+    .slide-page-badge {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.25rem;
+      border: 1px solid #e2e8f0;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    .slide-item:hover .slide-page-badge {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .slide-item.active .slide-page-badge {
+      background: #0369a1;
+      color: #f0f9ff;
+      border-color: #38bdf8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 目次ドロワー -->
+  <div class="drawer" id="drawer">
+    <h3 id="drawer-deck-title">スライド目次一覧</h3>
+    <ul class="slide-list" id="slide-list"></ul>
+  </div>
+
+  <main>
+    <iframe id="slide-viewport" src="about:blank" title="スライド表示エリア"></iframe>
+  </main>
+
+  <footer>
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="nav-controls">
+      <button class="btn" onclick="toggleDrawer()">☰ 目次</button>
+      <button class="btn" onclick="prevSlide()">◀ 前へ</button>
+      <button class="btn" onclick="nextSlide()">次へ ▶</button>
+    </div>
+
+    <div class="counter" id="counter">1 / 1</div>
+
+    <div class="nav-controls">
+      <a id="pdf-print-btn" href="print.html" target="_blank" class="btn" style="text-decoration:none;" title="ブラウザから直接16:9でPDF印刷・保存します">🖨️ 印刷 / PDF</a>
+      <button class="btn" onclick="toggleFullscreen()">⛶ フルスクリーン</button>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { slideDeckConfig } from './slide_config.js';
+
+    // プレゼンタイトルの反映
+    const deckTitle = slideDeckConfig.deckTitle || "スライドプレゼンテーション";
+    document.title = deckTitle;
+    
+    const drawerDeckTitle = document.getElementById('drawer-deck-title');
+    if (drawerDeckTitle) {
+      drawerDeckTitle.textContent = deckTitle;
+    }
+
+    const slides = slideDeckConfig.slides || [];
+    let currentIndex = 0;
+
+    // スライド内の <title> を動的キャッシュ
+    const titleCache = {};
+
+    function renderSlide() {
+      const viewport = document.getElementById('slide-viewport');
+      const counter = document.getElementById('counter');
+      const progressBar = document.getElementById('progress-bar');
+
+      const currentSlide = slides[currentIndex];
+      const slideUrl = typeof currentSlide === 'string' ? currentSlide : currentSlide.url;
+
+      viewport.src = slideUrl;
+      counter.textContent = `${currentIndex + 1} / ${slides.length}`;
+
+      const progress = ((currentIndex + 1) / slides.length) * 100;
+      progressBar.style.width = progress + '%';
+
+      // スライド内部の <title> を動的取得して目次を更新 ＆ 再帰的キーイベント連携
+      viewport.onload = () => {
+        try {
+          const doc = viewport.contentDocument || viewport.contentWindow.document;
+          if (doc) {
+            if (doc.title && !titleCache[slideUrl]) {
+              titleCache[slideUrl] = doc.title;
+              renderDrawerList();
+            }
+            // スライドおよび内部の埋め込みiframe（デモアプリ等）にも再帰的にキーイベントを登録
+            bindKeyEventsRecursively(doc);
+          }
+        } catch (e) {
+          console.warn('タイトル取得・キーイベント連携スキップ:', e);
+        }
+      };
+
+      renderDrawerList();
+    }
+
+    // 同一オリジンの子・孫iframeまで再帰的にkeydownイベントをバインド
+    function bindKeyEventsRecursively(targetDoc) {
+      if (!targetDoc) return;
+      try {
+        targetDoc.removeEventListener('keydown', handleKeyDown);
+        targetDoc.addEventListener('keydown', handleKeyDown);
+
+        const subIframes = targetDoc.querySelectorAll('iframe');
+        subIframes.forEach((subIframe) => {
+          const bindSub = () => {
+            try {
+              const subDoc = subIframe.contentDocument || (subIframe.contentWindow && subIframe.contentWindow.document);
+              if (subDoc) {
+                bindKeyEventsRecursively(subDoc);
+              }
+            } catch (err) {
+              // オリジン制限等があればスキップ
+            }
+          };
+
+          bindSub();
+          subIframe.addEventListener('load', bindSub);
+        });
+      } catch (e) {
+        console.warn('キーイベント連携スキップ:', e);
+      }
+    }
+
+    function nextSlide() {
+      if (currentIndex < slides.length - 1) {
+        currentIndex++;
+        renderSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderSlide();
+      }
+    }
+
+    function goToSlide(index) {
+      currentIndex = index;
+      renderSlide();
+    }
+
+    function toggleDrawer() {
+      document.getElementById('drawer').classList.toggle('open');
+    }
+
+    function renderDrawerList() {
+      const listEl = document.getElementById('slide-list');
+      let html = '';
+
+      slides.forEach((slide, idx) => {
+        const section = typeof slide === 'object' ? slide.section : null;
+        const isDemo = typeof slide === 'object' && slide.demo;
+        const label = section || slide.title || `スライド ${idx + 1}`;
+        const pageNum = `P.${String(idx + 1).padStart(2, '0')}`;
+
+        html += `
+          <li class="slide-item ${idx === currentIndex ? 'active' : ''}" onclick="window.goToSlide(${idx})">
+            <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden; margin-right: 0.5rem;">
+              <span class="slide-page-badge">${pageNum}</span>
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${label}</span>
+            </div>
+            ${isDemo ? '<span class="demo-badge">⚡ DEMO</span>' : ''}
+          </li>
+        `;
+      });
+
+      listEl.innerHTML = html;
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function handleKeyDown(e) {
+      // 入力フィールド等での入力中はスライド遷移をスキップ
+      const targetTag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
+      if (targetTag === 'input' || targetTag === 'textarea' || (e.target && e.target.isContentEditable)) {
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        if (e.key === ' ') e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    }
+
+    window.nextSlide = nextSlide;
+    window.prevSlide = prevSlide;
+    window.goToSlide = goToSlide;
+    window.toggleDrawer = toggleDrawer;
+    window.toggleFullscreen = toggleFullscreen;
+    window.handleKeyDown = handleKeyDown;
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // ビューポートを1920x1080の比率を保って親コンテナ内に収めるスケーリング処理
+    function updateSlideScale() {
+      const mainEl = document.querySelector('main');
+      const viewport = document.getElementById('slide-viewport');
+      if (!mainEl || !viewport) return;
+
+      const mainW = mainEl.clientWidth;
+      const mainH = mainEl.clientHeight;
+      if (!mainW || !mainH) return;
+
+      const scale = Math.min(mainW / 1920, mainH / 1080);
+      viewport.style.transform = `scale(${scale})`;
+    }
+
+    window.updateSlideScale = updateSlideScale;
+    window.addEventListener('resize', updateSlideScale);
+    document.addEventListener('fullscreenchange', () => {
+      setTimeout(updateSlideScale, 50);
+    });
+
+    updateSlideScale();
+    renderSlide();
+  </script>
+
+</body>
+</html>

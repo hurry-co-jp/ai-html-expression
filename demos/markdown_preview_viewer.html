@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown ⇄ HTMLプレビュー</title>
+  <!-- メジャーライブラリ: Marked.js & Mermaid.js -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+  <style>
+    html {
+      font-size: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ヘッダーバー */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 3.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .title-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .badge {
+      background: #16a34a;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    header h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    /* メインコンテンツ（2分割） */
+    .container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 3.5rem);
+      overflow: hidden;
+    }
+
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .panel-left {
+      border-right: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .panel-right {
+      background: #ffffff;
+      color: #1e293b;
+    }
+
+    .panel-header {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+    }
+
+    .panel-left .panel-header {
+      background: #f1f5f9;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .panel-right .panel-header {
+      background: #f8fafc;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    /* 左側：エディタ風Markdown表示 (ライトモード) */
+    .editor-wrapper {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #334155;
+      counter-reset: line;
+    }
+
+    .editor-line {
+      display: flex;
+    }
+
+    .editor-line::before {
+      counter-increment: line;
+      content: counter(line);
+      display: inline-block;
+      width: 2.5rem;
+      padding-right: 1rem;
+      text-align: right;
+      color: #94a3b8;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .editor-text {
+      flex: 1;
+    }
+
+    .syntax-heading { color: #0284c7; font-weight: bold; }
+    .syntax-list { color: #e11d48; }
+    .syntax-code { color: #2563eb; }
+    .syntax-bold { color: #d97706; font-weight: bold; }
+
+    /* トグル切り替えボタン */
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f8fafc;
+      color: #0f172a;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .toggle-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .toggle-btn.active {
+      background: #16a34a;
+      color: #ffffff;
+      border-color: #16a34a;
+      box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+    }
+
+    /* HTMLのみ中央表示モード */
+    .single-html-mode .panel-left {
+      display: none !important;
+    }
+
+    .single-html-mode .panel-right {
+      flex: 1;
+      max-width: 1300px;
+      margin: 0 auto;
+      border-left: 1px solid #e2e8f0;
+      border-right: 1px solid #e2e8f0;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .single-html-mode.container {
+      background: #f1f5f9;
+      justify-content: center;
+    }
+
+    /* 右側：Marked.js 標準HTMLレンダリング */
+    .preview-body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: #1e293b;
+      max-width: 50rem;
+      margin: 0 auto;
+    }
+
+    .preview-body h1 {
+      font-size: 1.375rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      color: #0284c7;
+      margin-top: 0.5rem;
+    }
+
+    .preview-body h2 {
+      font-size: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.375rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #0f172a;
+    }
+
+    .preview-body p {
+      margin-bottom: 0.75rem;
+    }
+
+    .preview-body ul, .preview-body ol {
+      padding-left: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .preview-body li {
+      margin-bottom: 0.25rem;
+    }
+
+    .preview-body strong {
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .preview-body code {
+      background: #f1f5f9;
+      color: #0969da;
+      padding: 0.125rem 0.375rem;
+      border-radius: 0.25rem;
+      font-size: 85%;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    .preview-body pre {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 0.75rem;
+      border-radius: 0.375rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .preview-body pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Mermaid コンテナ (相対単位レスポンシブ設計) */
+    .mermaid-container {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      min-height: 14rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .mermaid svg {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      min-height: 10rem;
+    }
+
+    .loading-state {
+      color: #64748b;
+      font-size: 0.8125rem;
+      padding: 1.25rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-area">
+      <h1>Markdown ⇄ HTMLプレビュー</h1>
+    </div>
+    <div class="controls-area">
+      <button id="toggle-view-btn" class="toggle-btn" onclick="toggleSingleView()">
+        <span class="btn-icon">📄</span>
+        <span class="btn-text">HTMLのみ中央表示</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- 左側：生のMarkdownテキスト表示 -->
+    <div class="panel panel-left">
+      <div class="panel-header">
+        <span>Markdown</span>
+      </div>
+      <div class="panel-body">
+        <div class="editor-wrapper" id="editor">
+          <div class="loading-state">読み込んでいます...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右側：標準HTMLビュー -->
+    <div class="panel panel-right">
+      <div class="panel-header">
+        <span>HTMLプレビュー</span>
+      </div>
+      <div class="panel-body">
+        <div class="preview-body" id="preview">
+          <div class="loading-state">レンダリング中...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Mermaidの初期設定
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      securityLevel: 'loose',
+      fontSize: 16,
+      flowchart: { useMaxWidth: true, htmlLabels: true }
+    });
+
+    // aws_cost_memo.md の動的取得 & Marked.js レンダリング処理
+    async function loadAndRender() {
+      let markdownText = "";
+      try {
+        const response = await fetch('./aws_cost_memo.md');
+        if (response.ok) {
+          markdownText = await response.text();
+        } else {
+          throw new Error('Fetch failed with status ' + response.status);
+        }
+      } catch (err) {
+        console.warn('aws_cost_memo.md の直接fetchに失敗したため、初期データをロードします:', err);
+        markdownText = getFallbackMarkdown();
+      }
+
+      renderLeftEditor(markdownText);
+      await renderRightPreviewWithLibraries(markdownText);
+    }
+
+    // 左側：エディタ風テキスト表示（行番号＆構文強調）
+    function renderLeftEditor(text) {
+      const editorEl = document.getElementById('editor');
+      const lines = text.split('\n');
+      
+      const html = lines.map(line => {
+        let escaped = escapeHtml(line);
+        if (escaped.startsWith('# ')) {
+          escaped = `<span class="syntax-heading">${escaped}</span>`;
+        } else if (escaped.startsWith('## ')) {
+          escaped = `<span class="syntax-heading">${escaped}</span>`;
+        } else if (escaped.trim().startsWith('- ')) {
+          escaped = escaped.replace('- ', '<span class="syntax-list">- </span>');
+        } else if (escaped.startsWith('```')) {
+          escaped = `<span class="syntax-code">${escaped}</span>`;
+        }
+        escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<span class="syntax-bold">**$1**</span>');
+        
+        return `<div class="editor-line"><span class="editor-text">${escaped || ' '}</span></div>`;
+      }).join('');
+
+      editorEl.innerHTML = html;
+    }
+
+    // 右側：Marked.js + Mermaid.js による標準レンダリング
+    async function renderRightPreviewWithLibraries(text) {
+      const previewEl = document.getElementById('preview');
+
+      // 1. Marked.js によるパース
+      let rawHtml = marked.parse(text);
+
+      // 2. Mermaid コードブロックの検出と置換
+      const tempContainer = document.createElement('div');
+      tempContainer.innerHTML = rawHtml;
+
+      const codeBlocks = tempContainer.querySelectorAll('pre code.language-mermaid');
+      codeBlocks.forEach((codeEl, index) => {
+        const preEl = codeEl.parentElement;
+        const mermaidDiv = document.createElement('div');
+        mermaidDiv.className = 'mermaid-container';
+
+        const mermaidContent = document.createElement('div');
+        mermaidContent.className = 'mermaid';
+        mermaidContent.id = 'mermaid-svg-' + index;
+        mermaidContent.textContent = codeEl.textContent;
+
+        mermaidDiv.appendChild(mermaidContent);
+        preEl.replaceWith(mermaidDiv);
+      });
+
+      // 3. HTMLを画面へ反映
+      previewEl.innerHTML = tempContainer.innerHTML;
+
+      // 4. Mermaid.js によるダイアグラム公式レンダリング
+      try {
+        await mermaid.run({
+          querySelector: '.mermaid'
+        });
+      } catch (mErr) {
+        console.error('Mermaid レンダリングエラー:', mErr);
+      }
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // フェッチ不可時のバックアップデータ
+    function getFallbackMarkdown() {
+      return `# AWSサービスごとのコスト増減チェック自動化メモ
+
+## 1. 背景・目的
+毎日のAWS利用料の中で、「どのサービスが前日や先週と比べて急に増えたか（消し忘れやリソース急増）」を、ブラウザを開けば一目で確認できるようにしたい。
+
+## 2. 今どうやっているのか
+- 気付いた人がたまに AWS Cost Explorer を開いて確認している
+- サービスごとの差額を見るには、日付フィルターを変更してCSVをダウンロードし、手作業で引き算して比較している
+- 結果として日々のチェックが定着せず、月末に想定外の請求が来てから気付くことがある
+
+## 3. 解決できると考えている面倒なところ
+- 毎回コンソールを開いてフィルター設定・CSV加工する手作業をなくす
+- 「前日比」「前週同曜日比」の差分計算を自動化し、増減の比較にかかる時間を削減する
+
+## 4. どう解決するのか（構想）
+- 毎朝 EventBridge から Lambda を自動実行
+- Cost Explorer API から直近のサービス別日次コストを取得
+- サービスごとの差分（前日比・前週比）を計算して S3 に JSON として保存
+- ブラウザを開くだけで、増減が一覧できる専用のHTML画面を用意する
+
+\`\`\`mermaid
+flowchart LR
+    Timer[EventBridge: 毎朝08:00] --> Lambda[差分集計 Lambda]
+    Lambda --> API[Cost Explorer API]
+    Lambda --> S3[(S3: 差分データ蓄積)]
+    S3 --> Web[増減チェック専用HTML]
+\`\`\`
+
+## 5. 何が嬉しいのか（効果）
+- 毎朝の確認がサッと終わり、リソース消し忘れや負荷急増に当日中に気付ける
+- 汎用画面ではなく「自分たちが見たい差分」だけに特化しているため、判断がしやすい
+
+## 6. ランニング費用（試算）
+- Cost Explorer API 呼び出し: 約$0.01/回（月30回で約 $0.3/月）
+- Lambda / S3: 無料枠〜数円レベル
+
+## 7. 実装タスク（※検討事項の結果に応じて変更の可能性あり）
+- **① 画面・データ設計（最優先）**:
+  - 差分表示用HTMLのプロトタイプ作成
+  - 最適なJSONスキーマの検討・定義
+- **② 集計処理の実装**:
+  - Cost Explorer APIからのデータ取得
+  - 前日比・前週比の差分計算 ＆ JSON出力処理
+- **③ インフラ構築・自動化**:
+  - IaCコード作成 ＋ デプロイ（EventBridge, Lambda, S3）
+
+## 8. 検討事項（チーム相談ポイント）
+- **HTMLの配置場所とアクセス制御**
+  - 背景：コスト情報は社外秘のため、一般公開は避ける必要がある
+  - 検討ポイント：S3静的ホスティング（IP制限等）にするか、社内サーバーやローカル環境で動かすか、手軽さと安全性のバランスをどう取るか
+- **S3データの取得方式とセキュリティ**
+  - 背景：ブラウザからS3の非公開データを直接取得しようとするとCORSや認証が課題になる
+  - 検討ポイント：バケットポリシーでのIP制限、署名付きURL、CLI経由での取得など、メンバーの利用手順に合わせた最適な連携方式をどうするか`;
+    }
+
+    // 表示モード切り替え（2画面比較 ⇄ HTMLのみ中央表示）
+    function toggleSingleView() {
+      const container = document.querySelector('.container');
+      const btn = document.getElementById('toggle-view-btn');
+      const isSingle = container.classList.toggle('single-html-mode');
+
+      if (isSingle) {
+        btn.classList.add('active');
+        btn.innerHTML = '<span class="btn-icon">⇄</span><span class="btn-text">2画面比較に戻す</span>';
+      } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<span class="btn-icon">📄</span><span class="btn-text">HTMLのみ中央表示</span>';
+      }
+    }
+
+    // 初期実行
+    loadAndRender();
+  </script>
+</body>
+</html>

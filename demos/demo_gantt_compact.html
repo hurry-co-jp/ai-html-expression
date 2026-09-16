@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>作例③ ガントチャート（デモ）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 0.35rem;
+      height: 0.35rem;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 0.25rem;
+    }
+
+    /* タブ切り替えボタン */
+    .tab-btn {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .tab-btn.active {
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #4f46e5;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 p-2.5 sm:p-4 custom-scrollbar min-h-screen">
+
+  <div class="w-full max-w-[1500px] mx-auto space-y-2.5">
+
+    <!-- ヘッダーエリア ＆ 凡例 -->
+    <header
+      class="bg-white px-5 py-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">📊</span>
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+            AWS クラウドネイティブ基盤 並行開発 WBSガントチャート
+          </h1>
+        </div>
+        <p class="text-sm text-slate-500 mt-1">
+          期間: 2026年9月1日 〜 10月16日 | 基準日（今日）: <b id="today-display"
+            class="text-rose-600 font-mono text-base font-extrabold">2026-09-17</b>
+        </p>
+      </div>
+
+      <!-- 凡例 -->
+      <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+        <span class="px-2.5 py-1 rounded bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs">
+          🇯🇵 祝日・休日
+        </span>
+        <span class="px-2.5 py-1 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold text-xs">
+          🏖️ 年休推奨日
+        </span>
+        <span class="px-2.5 py-1 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold text-xs">
+          ◆ マイルストーン
+        </span>
+        <span
+          class="px-2.5 py-1 rounded bg-rose-50 text-rose-800 border border-rose-300 font-bold text-xs flex items-center gap-1">
+          🔻 今日 (クリックで移動)
+        </span>
+        <span class="px-2.5 py-1 rounded bg-slate-100 text-slate-600 border border-slate-200 font-bold text-xs">
+          ✓ 完了
+        </span>
+      </div>
+    </header>
+
+    <!-- タブ切り替えバー -->
+    <div class="flex items-center justify-between gap-3 border-b border-slate-200 pb-2.5">
+      <div class="flex items-center gap-2.5">
+        <button id="btn-chart" class="tab-btn active px-4 py-2 text-sm font-bold">
+          <span>📅</span> ガントチャート
+        </button>
+        <button id="btn-json" class="tab-btn px-4 py-2 text-sm font-bold">
+          <span>📜</span> スケジュール定義 (JSON)
+        </button>
+      </div>
+    </div>
+
+    <!-- 1. ガントチャート Canvas コンテナ -->
+    <main id="chart-container"
+      class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs overflow-x-auto custom-scrollbar">
+      <canvas id="schedule-canvas" class="block mx-auto cursor-pointer"></canvas>
+    </main>
+
+    <!-- 2. JSONビューワ コンテナ -->
+    <section id="json-container" class="hidden bg-slate-950 p-5 rounded-xl border border-slate-800 shadow-xs relative">
+      <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800">
+        <span class="text-sm font-mono text-emerald-400 font-bold">
+          schedule_definition.json
+        </span>
+        <button id="btn-copy-json"
+          class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-bold border border-slate-700 transition">
+          📋 JSONをコピー
+        </button>
+      </div>
+      <pre id="json-code" class="text-sm font-mono text-slate-300 overflow-auto max-h-[520px] leading-relaxed"></pre>
+    </section>
+
+  </div>
+
+  <script>
+    // デモ用データ（JSON）
+    const SCHEDULE_DATA = {
+      project: {
+        title: "AWS クラウドネイティブ基盤 並行開発",
+        startDate: "2026-09-01",
+        endDate: "2026-10-16",
+        today: "2026-09-17"
+      },
+      holidays: {
+        "2026-09-21": "敬老の日",
+        "2026-09-22": "国民の休日",
+        "2026-09-23": "秋分の日",
+        "2026-10-12": "スポーツの日"
+      },
+      recommendedLeaves: {
+        "2026-09-24": "年休推奨日",
+        "2026-09-25": "年休推奨日"
+      },
+      milestones: [
+        { date: "2026-09-18", label: "M1: 基盤プロトタイプ準備", color: "#7c3aed" },
+        { date: "2026-10-02", label: "M2: コアAPI実装完了", color: "#7c3aed" },
+        { date: "2026-10-16", label: "M3: 結合テスト完了", color: "#7c3aed" }
+      ],
+      tasks: [
+        { no: 1, task: "要件定義 ＆ 技術選定検証", assignee: "メンバーA", color: "#0284c7", start: "2026-09-01", end: "2026-09-08" },
+        { no: 2, task: "インフラ設計・IaC基盤構築 (Terraform)", assignee: "メンバーA", color: "#0284c7", start: "2026-09-09", end: "2026-09-25" },
+        { no: 3, task: "コアAPI設計 ＆ DBスキーマ策定", assignee: "メンバーB", color: "#059669", start: "2026-09-02", end: "2026-09-11" },
+        { no: 4, task: "認証 ＆ データアクセスAPI実装", assignee: "メンバーB", color: "#059669", start: "2026-09-14", end: "2026-10-02" },
+        { no: 5, task: "画面UIプロトタイプ・コンポーネント実装", assignee: "メンバーC", color: "#7c3aed", start: "2026-09-07", end: "2026-09-29" },
+        { no: 6, task: "フロント・バックエンドAPI疎通検証", assignee: "メンバーB & C", color: "#059669", start: "2026-10-05", end: "2026-10-09" },
+        { no: 7, task: "総合結合テスト ＆ 負荷テスト", assignee: "全員", color: "#475569", start: "2026-10-12", end: "2026-10-16" }
+      ]
+    };
+
+    // タブ制御
+    const btnChart = document.getElementById('btn-chart');
+    const btnJson = document.getElementById('btn-json');
+    const chartContainer = document.getElementById('chart-container');
+    const jsonContainer = document.getElementById('json-container');
+    const jsonCode = document.getElementById('json-code');
+    const todayDisplay = document.getElementById('today-display');
+
+    jsonCode.textContent = JSON.stringify(SCHEDULE_DATA, null, 2);
+
+    btnChart.addEventListener('click', () => {
+      btnChart.classList.add('active');
+      btnJson.classList.remove('active');
+      chartContainer.classList.remove('hidden');
+      jsonContainer.classList.add('hidden');
+    });
+
+    btnJson.addEventListener('click', () => {
+      btnJson.classList.add('active');
+      btnChart.classList.remove('active');
+      jsonContainer.classList.remove('hidden');
+      chartContainer.classList.add('hidden');
+      jsonCode.textContent = JSON.stringify(SCHEDULE_DATA, null, 2);
+    });
+
+    document.getElementById('btn-copy-json').addEventListener('click', () => {
+      navigator.clipboard.writeText(JSON.stringify(SCHEDULE_DATA, null, 2)).then(() => {
+        const btn = document.getElementById('btn-copy-json');
+        btn.innerText = '✅ コピー完了！';
+        setTimeout(() => btn.innerText = '📋 JSONをコピー', 2000);
+      });
+    });
+
+    const COL_WIDTHS = {
+      no: 44,
+      task: 330,
+      assignee: 130,
+      period: 125,
+      workDays: 55
+    };
+
+    const COLS = {
+      no: { x: 0, w: COL_WIDTHS.no },
+      task: { x: COL_WIDTHS.no, w: COL_WIDTHS.task },
+      assignee: { x: COL_WIDTHS.no + COL_WIDTHS.task, w: COL_WIDTHS.assignee },
+      period: { x: COL_WIDTHS.no + COL_WIDTHS.task + COL_WIDTHS.assignee, w: COL_WIDTHS.period },
+      workDays: { x: COL_WIDTHS.no + COL_WIDTHS.task + COL_WIDTHS.assignee + COL_WIDTHS.period, w: COL_WIDTHS.workDays }
+    };
+    const TABLE_WIDTH = COLS.workDays.x + COLS.workDays.w;
+
+    const DAY_COL_WIDTH = 28;
+    const HEADER_H = 68;
+    const ROW_H = 46;
+
+    function parseDate(str) {
+      const parts = str.split('-');
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+
+    function formatDateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function calculateWorkingDays(startDateStr, endDateStr) {
+      let current = parseDate(startDateStr);
+      const end = parseDate(endDateStr);
+      let count = 0;
+
+      while (current <= end) {
+        const dayOfWeek = current.getDay();
+        const dateKey = formatDateKey(current);
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const isHoliday = !!SCHEDULE_DATA.holidays[dateKey];
+        const isRecommended = !!SCHEDULE_DATA.recommendedLeaves[dateKey];
+
+        if (!isWeekend && !isHoliday && !isRecommended) {
+          count++;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+      return count;
+    }
+
+    let allDays = [];
+    const canvas = document.getElementById('schedule-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function renderGantt() {
+      const startDate = parseDate(SCHEDULE_DATA.project.startDate);
+      const endDate = parseDate(SCHEDULE_DATA.project.endDate);
+
+      // 全日付配列生成
+      allDays = [];
+      let cur = new Date(startDate);
+      while (cur <= endDate) {
+        allDays.push(new Date(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      const totalDays = allDays.length;
+      const totalWidth = TABLE_WIDTH + totalDays * DAY_COL_WIDTH;
+      const totalHeight = HEADER_H + SCHEDULE_DATA.tasks.length * ROW_H;
+
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = totalWidth * dpr;
+      canvas.height = totalHeight * dpr;
+      canvas.style.width = totalWidth + 'px';
+      canvas.style.height = totalHeight + 'px';
+      ctx.scale(dpr, dpr);
+
+      // 背景クリア
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, totalWidth, totalHeight);
+
+      // ==========================================
+      // 1. カレンダー列の背景（土日・祝日・年休）
+      // ==========================================
+      allDays.forEach((d, idx) => {
+        const x = TABLE_WIDTH + idx * DAY_COL_WIDTH;
+        const dayOfWeek = d.getDay();
+        const dateKey = formatDateKey(d);
+
+        let bg = '#ffffff';
+        if (dayOfWeek === 0 || dayOfWeek === 6 || SCHEDULE_DATA.holidays[dateKey]) {
+          bg = '#fff1f2'; // 土日・祝日 (淡い赤)
+        } else if (SCHEDULE_DATA.recommendedLeaves[dateKey]) {
+          bg = '#fff7ed'; // 年休推奨日 (淡いオレンジ)
+        }
+
+        ctx.fillStyle = bg;
+        ctx.fillRect(x, 0, DAY_COL_WIDTH, totalHeight);
+
+        // 縦グリッド線
+        ctx.strokeStyle = '#f1f5f9';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, totalHeight);
+        ctx.stroke();
+      });
+
+      // ==========================================
+      // 2. ヘッダー描画
+      // ==========================================
+      // テーブル側ヘッダー背景
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, TABLE_WIDTH, HEADER_H);
+
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0, 0, TABLE_WIDTH, HEADER_H);
+
+      // テーブルヘッダー文字
+      ctx.fillStyle = '#475569';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.fillText('No', COLS.no.x + COLS.no.w / 2, HEADER_H / 2);
+      ctx.fillText('タスク名', COLS.task.x + COLS.task.w / 2, HEADER_H / 2);
+      ctx.fillText('担当', COLS.assignee.x + COLS.assignee.w / 2, HEADER_H / 2);
+      ctx.fillText('期間', COLS.period.x + COLS.period.w / 2, HEADER_H / 2);
+      ctx.fillText('工数', COLS.workDays.x + COLS.workDays.w / 2, HEADER_H / 2);
+
+      // カレンダー側ヘッダー（上段: 月、下段: 日・曜日）
+      let curMonth = -1;
+      let monthStartX = 0;
+      let monthSpan = 0;
+
+      allDays.forEach((d, idx) => {
+        const x = TABLE_WIDTH + idx * DAY_COL_WIDTH;
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        const dow = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+
+        const dateKey = formatDateKey(d);
+        const isHoliday = !!SCHEDULE_DATA.holidays[dateKey];
+        const isRecommended = !!SCHEDULE_DATA.recommendedLeaves[dateKey];
+        const isHolidayOrWeekend = (d.getDay() === 0 || d.getDay() === 6 || isHoliday);
+
+        // 下段（日付・曜日）
+        let headerBg = '#f8fafc';
+        let textCol = '#334155';
+        let dowCol = '#64748b';
+
+        if (isHolidayOrWeekend) {
+          headerBg = '#fff1f2';
+          textCol = '#e11d48';
+          dowCol = '#e11d48';
+        } else if (isRecommended) {
+          headerBg = '#fff7ed';
+          textCol = '#ea580c';
+          dowCol = '#ea580c';
+        }
+
+        ctx.fillStyle = headerBg;
+        ctx.fillRect(x, 32, DAY_COL_WIDTH, 36);
+
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = textCol;
+        ctx.textAlign = 'center';
+        ctx.fillText(day, x + DAY_COL_WIDTH / 2, 45);
+
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = dowCol;
+        ctx.fillText(dow, x + DAY_COL_WIDTH / 2, 59);
+
+        // 月の区切り計算
+        if (m !== curMonth) {
+          if (curMonth !== -1) {
+            ctx.fillStyle = '#f1f5f9';
+            ctx.fillRect(monthStartX, 0, monthSpan * DAY_COL_WIDTH, 32);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.strokeRect(monthStartX, 0, monthSpan * DAY_COL_WIDTH, 32);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${curMonth}月`, monthStartX + (monthSpan * DAY_COL_WIDTH) / 2, 16);
+          }
+          curMonth = m;
+          monthStartX = x;
+          monthSpan = 1;
+        } else {
+          monthSpan++;
+        }
+      });
+
+      // 最後の月描画
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fillRect(monthStartX, 0, monthSpan * DAY_COL_WIDTH, 32);
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.strokeRect(monthStartX, 0, monthSpan * DAY_COL_WIDTH, 32);
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${curMonth}月`, monthStartX + (monthSpan * DAY_COL_WIDTH) / 2, 16);
+
+      // ==========================================
+      // 3. タスク行描画
+      // ==========================================
+      const currentToday = SCHEDULE_DATA.project.today;
+
+      SCHEDULE_DATA.tasks.forEach((t, rIdx) => {
+        const y = HEADER_H + rIdx * ROW_H;
+        // 今日より前に完了しているタスクを動的判定（データ内のdoneプロパティに依存しない）
+        const isDone = currentToday ? (t.end < currentToday) : false;
+
+        // 行背景
+        ctx.fillStyle = rIdx % 2 === 0 ? '#ffffff' : '#fcfcfd';
+        ctx.fillRect(0, y, totalWidth, ROW_H);
+
+        // テーブル枠線
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.strokeRect(0, y, TABLE_WIDTH, ROW_H);
+
+        // テキスト描画
+        ctx.font = '14.5px sans-serif';
+        ctx.fillStyle = '#1e293b';
+        ctx.textBaseline = 'middle';
+
+        // No
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(t.no, COLS.no.x + COLS.no.w / 2, y + ROW_H / 2);
+
+        // タスク名（今日より前のタスクには自動でチェックマークを付与）
+        ctx.textAlign = 'left';
+        if (isDone) {
+          ctx.fillStyle = '#16a34a';
+          ctx.font = 'bold 14.5px sans-serif';
+          ctx.fillText(`✓ ${t.task}`, COLS.task.x + 10, y + ROW_H / 2);
+        } else {
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 14.5px sans-serif';
+          ctx.fillText(t.task, COLS.task.x + 10, y + ROW_H / 2);
+        }
+
+        // 担当者バッジ
+        ctx.save();
+        if (isDone) {
+          ctx.globalAlpha = 0.6;
+        }
+        ctx.fillStyle = t.color + '18';
+        ctx.strokeStyle = t.color + '60';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(COLS.assignee.x + 8, y + 8, COLS.assignee.w - 16, ROW_H - 16, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = isDone ? '#64748b' : t.color;
+        ctx.font = 'bold 13.5px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(t.assignee, COLS.assignee.x + COLS.assignee.w / 2, y + ROW_H / 2);
+        ctx.restore();
+
+        // 期間 (9/1〜9/8)
+        ctx.fillStyle = isDone ? '#94a3b8' : '#64748b';
+        ctx.font = '13px monospace';
+        ctx.textAlign = 'center';
+        const sM = t.start.slice(5).replace('-', '/');
+        const eM = t.end.slice(5).replace('-', '/');
+        ctx.fillText(`${sM}〜${eM}`, COLS.period.x + COLS.period.w / 2, y + ROW_H / 2);
+
+        // 工数（稼働日数）
+        const wDays = calculateWorkingDays(t.start, t.end);
+        ctx.fillStyle = isDone ? '#94a3b8' : '#334155';
+        ctx.font = 'bold 13.5px sans-serif';
+        ctx.fillText(`${wDays}日`, COLS.workDays.x + COLS.workDays.w / 2, y + ROW_H / 2);
+
+        // ==========================================
+        // 4. カレンダー上のガントバー描画
+        // ==========================================
+        const tStart = parseDate(t.start);
+        const tEnd = parseDate(t.end);
+
+        const startIdx = Math.max(0, Math.round((tStart - startDate) / (1000 * 60 * 60 * 24)));
+        const endIdx = Math.min(totalDays - 1, Math.round((tEnd - startDate) / (1000 * 60 * 60 * 24)));
+
+        const barX = TABLE_WIDTH + startIdx * DAY_COL_WIDTH + 2;
+        const barW = (endIdx - startIdx + 1) * DAY_COL_WIDTH - 4;
+        const barY = y + 9;
+        const barH = ROW_H - 18;
+
+        ctx.save();
+        ctx.fillStyle = isDone ? '#94a3b8' : t.color;
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, barW, barH, 5);
+        ctx.fill();
+
+        // バー内テキスト
+        if (barW > 60) {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(t.task, barX + 8, barY + barH / 2 + 1);
+        }
+        ctx.restore();
+
+        // 行の下線
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.beginPath();
+        ctx.moveTo(0, y + ROW_H);
+        ctx.lineTo(totalWidth, y + ROW_H);
+        ctx.stroke();
+      });
+
+      // ==========================================
+      // 5. 今日（基準日）の赤縦線 ＆ マーカー
+      // ==========================================
+      const todayDate = parseDate(SCHEDULE_DATA.project.today);
+      const todayIdx = Math.round((todayDate - startDate) / (1000 * 60 * 60 * 24));
+
+      if (todayIdx >= 0 && todayIdx < totalDays) {
+        const todayX = TABLE_WIDTH + todayIdx * DAY_COL_WIDTH + DAY_COL_WIDTH / 2;
+
+        ctx.save();
+        ctx.strokeStyle = '#e11d48';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(todayX, 32);
+        ctx.lineTo(todayX, totalHeight);
+        ctx.stroke();
+
+        // ピンマーカー
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.arc(todayX, 30, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ピン上部の「今日」文字
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = '#e11d48';
+        ctx.textAlign = 'center';
+        ctx.fillText('今日', todayX, 20);
+        ctx.restore();
+      }
+
+      // ==========================================
+      // 6. マイルストーン（◆）描画
+      // ==========================================
+      SCHEDULE_DATA.milestones.forEach(m => {
+        const mDate = parseDate(m.date);
+        const mIdx = Math.round((mDate - startDate) / (1000 * 60 * 60 * 24));
+        if (mIdx >= 0 && mIdx < totalDays) {
+          const mX = TABLE_WIDTH + mIdx * DAY_COL_WIDTH + DAY_COL_WIDTH / 2;
+
+          ctx.save();
+          ctx.fillStyle = m.color;
+          ctx.font = 'bold 16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('◆', mX, 16);
+          ctx.restore();
+        }
+      });
+    }
+
+    // カレンダークリックで「今日」の位置を変更
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+
+      if (clickX >= TABLE_WIDTH) {
+        const dayIdx = Math.floor((clickX - TABLE_WIDTH) / DAY_COL_WIDTH);
+        if (dayIdx >= 0 && dayIdx < allDays.length) {
+          const selectedDate = allDays[dayIdx];
+          const newTodayKey = formatDateKey(selectedDate);
+          SCHEDULE_DATA.project.today = newTodayKey;
+          todayDisplay.innerText = newTodayKey;
+          if (jsonCode) jsonCode.textContent = JSON.stringify(SCHEDULE_DATA, null, 2);
+          renderGantt();
+        }
+      }
+    });
+
+    window.addEventListener('load', renderGantt);
+  </script>
+</body>
+
+</html>

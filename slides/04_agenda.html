@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>目次</title>
+  <link rel="stylesheet" href="../theme/slide_theme.css">
+  <script src="../theme/slide_theme.js" defer></script>
+  <style>
+    .agenda-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0.5rem 0 1.5rem;
+      width: 100%;
+    }
+
+    .agenda-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.0rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+
+    .agenda-item {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 0.85rem;
+      padding: 1.15rem 2.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 1.25rem;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .agenda-title {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.35;
+    }
+
+    .time-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 9999px;
+      padding: 0.45rem 1.25rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #0369a1;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .time-badge svg {
+      width: 1.2rem;
+      height: 1.2rem;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.2;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <h1>目次</h1>
+      <div class="slide-logo"></div>
+    </header>
+
+    <main class="slide-content agenda-wrapper">
+      <ul class="agenda-list">
+        <li class="agenda-item">
+          <span class="agenda-title">はじめに：Markdownとは？</span>
+          <span class="time-badge">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+            2分
+          </span>
+        </li>
+
+        <li class="agenda-item">
+          <span class="agenda-title">なぜわざわざAIでHTMLを作らせるのか？</span>
+          <span class="time-badge">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+            1分
+          </span>
+        </li>
+
+        <li class="agenda-item">
+          <span class="agenda-title">HTML作成の思考サイクル</span>
+          <span class="time-badge">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+            5分
+          </span>
+        </li>
+
+        <li class="agenda-item">
+          <span class="agenda-title">やってみた感想（小まとめ）</span>
+          <span class="time-badge">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+            2分
+          </span>
+        </li>
+
+        <li class="agenda-item">
+          <span class="agenda-title">実際に作ってみたデモ紹介</span>
+          <span class="time-badge">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+            7〜10分
+          </span>
+        </li>
+
+        <li class="agenda-item">
+          <span class="agenda-title">まとめ</span>
+          <span class="time-badge">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+            2分
+          </span>
+        </li>
+      </ul>
+    </main>
+
+    <footer class="slide-footer"></footer>
+  </div>
+</body>
+</html>

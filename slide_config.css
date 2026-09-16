@@ -1,0 +1,14 @@
+/**
+ * スライドデザイン用設定ファイル (slide_config.css)
+ * ロゴ画像パス、著作権表記、総スライド数(分母)、分母表示オプション(true/false)の外出し定義
+ */
+:root {
+  --logo-image: url('../theme/logo.png');
+  /* ロゴ画像のパス (slides階層基準) */
+  --copyright-text: "© 2026 . Inc.";
+  /* 左下コピーライト文字 */
+  --total-slides: "25";
+  /* 全スライド数(分母) 25枚 */
+  --show-total-slides: true;
+  /* true: 分母を表示 ("2 / 18"), false: 分母を非表示 ("2" のみ) */
+}

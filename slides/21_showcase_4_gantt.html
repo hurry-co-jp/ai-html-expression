@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デモ④ ガントチャート</title>
+  <link rel="stylesheet" href="../theme/slide_theme.css">
+  <script src="../theme/slide_theme.js" defer></script>
+  <style>
+    .slide-content {
+      padding: 0.75rem 3.5rem 1.25rem 3.5rem !important;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow: hidden;
+    }
+
+    /* 上部の注目ポイント・メッセージバー */
+    .showcase-banner {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.6rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    }
+
+    .banner-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .banner-item {
+      display: inline-flex;
+      align-items: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #334155;
+      background: #f1f5f9;
+      padding: 0.25rem 0.65rem;
+      border-radius: 0.4rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .banner-lesson {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .external-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #0284c7;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      transition: all 0.15s ease-in-out;
+      white-space: nowrap;
+    }
+
+    .external-btn:hover {
+      background: #e0f2fe;
+      border-color: #7dd3fc;
+    }
+
+    /* デモ埋め込みコンテナ */
+    .demo-iframe-container {
+      width: 100%;
+      flex: 1;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      background: #f8fafc;
+    }
+
+    iframe.demo-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <h1>デモ④ ガントチャート <span class="diff-badge badge-hard">難しい</span></h1>
+      <div class="slide-logo"></div>
+    </header>
+
+    <main class="slide-content">
+      <!-- 注目ポイントバナー -->
+      <div class="showcase-banner">
+        <div class="banner-left">
+          <span class="banner-item">テキスト定義（JSON）から立ち上げるWBS</span>
+          <span class="banner-lesson">日付やタスクのテキスト編集だけで日程を即座に再編でき、稼働日数や進捗判定も自動計算</span>
+        </div>
+        <a href="../demos/demo_gantt_compact.html" target="_blank" rel="noopener noreferrer" class="external-btn">
+          別タブで開く ↗
+        </a>
+      </div>
+
+      <!-- デモ本体 (iframe) -->
+      <div class="demo-iframe-container">
+        <iframe src="../demos/demo_gantt_compact.html" class="demo-iframe" title="作例② ガントチャートデモ"></iframe>
+      </div>
+    </main>
+
+    <footer class="slide-footer"></footer>
+  </div>
+</body>
+
+</html>

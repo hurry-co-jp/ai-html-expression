@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>作例⑤ ExcelのMarkdown化（本物CanvasExcelRenderer ＆ Markdown抽出）</title>
+
+  <!-- marked.js (Markdown HTML レンダリングエンジン) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- 元のツール共通スタイルシート -->
+  <link rel="stylesheet" href="../../../Tools/excel-viewer/style.css">
+
+  <style>
+    /* スライド大画面用に文字サイズ・レイアウトを最適化 */
+    body {
+      font-size: 14.5px;
+    }
+
+    header {
+      height: 52px;
+      padding: 0 18px;
+    }
+
+    .file-name {
+      font-size: 15.5px;
+      max-width: 480px;
+    }
+
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+    }
+
+    /* 左右固定のスプリットビュー（左: 本物Excel Canvas / 右: 本物構造化Markdown） */
+    #app-body {
+      display: flex !important;
+      flex-direction: row !important;
+    }
+
+    #main-panel {
+      flex: 1 1 50% !important;
+      width: 50% !important;
+      min-width: 0 !important;
+      border-right: 1px solid #cbd5e1 !important;
+      position: relative !important;
+    }
+
+    #side-panel {
+      position: static !important;
+      transform: none !important;
+      flex: 1 1 50% !important;
+      width: 50% !important;
+      min-width: 0 !important;
+      box-shadow: none !important;
+      border-left: none !important;
+      display: flex !important;
+      transition: none !important;
+    }
+
+    /* パネルヘッダー・タブ */
+    .panel-header {
+      height: 48px;
+      padding: 10px 16px;
+      font-size: 14.5px;
+    }
+
+    .tab-btn {
+      font-size: 13.5px;
+      padding: 4px 12px;
+    }
+
+    .btn {
+      font-size: 13.5px;
+      padding: 6px 14px;
+    }
+
+    .sheet-tab {
+      font-size: 13px;
+      padding: 5px 14px;
+    }
+
+    /* Markdown プレビュー内の文字サイズ向上 */
+    .markdown-body,
+    #markdown-preview {
+      font-size: 14.5px;
+      line-height: 1.7;
+    }
+
+    #markdown-output {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    #markdown-outline {
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ヘッダー -->
+  <header>
+    <div class="header-left">
+      <div class="logo-badge">X</div>
+      <div class="file-name" id="file-name-display">AWSクラウド基盤_インフラパラメータ設計仕様書.xlsx</div>
+      <div class="file-badge" id="file-size-badge">15.3 KB</div>
+      <div class="header-hint" style="font-size: 12px; color: #15803d; font-weight: 700; background: #dcfce7; border: 1px solid #bbf7d0; padding: 3px 8px; border-radius: 4px;">
+        ※ Pure HTML5 Canvas 描画 ＆ 外部ライブラリゼロの完全自前パース
+      </div>
+    </div>
+    <div class="header-right">
+      <label class="header-toggle-label" id="swap-toggle-wrapper" title="クリックでメイン画面を切り替え" style="display: none;">
+        <span class="toggle-text" id="swap-toggle-text">Markdownメイン</span>
+        <div class="toggle-switch">
+          <input type="checkbox" id="swap-toggle-input">
+          <span class="toggle-slider"></span>
+        </div>
+      </label>
+      <label class="header-toggle-label" id="side-toggle-wrapper" title="クリックでサイドパネルの開閉を切り替え" style="display: none;">
+        <span class="toggle-text" id="side-toggle-text">サイドパネル</span>
+        <div class="toggle-switch">
+          <input type="checkbox" id="side-toggle-input" checked>
+          <span class="toggle-slider"></span>
+        </div>
+      </label>
+      <label class="btn btn-primary" title="ローカルのExcelファイルを開く">
+        <span>📁 別のExcelを開く</span>
+        <input type="file" id="file-input" accept=".xlsx" style="display:none;">
+      </label>
+    </div>
+  </header>
+
+  <!-- アプリ本体領域 -->
+  <div id="app-body">
+    <!-- メイン領域 (左側: Excel Canvasビューワー) -->
+    <main id="main-panel">
+      <!-- フローティング検索バー -->
+      <div id="search-bar-floating">
+        <input type="text" id="search-input" placeholder="検索 (Enterで次へ)...">
+        <span id="search-count" style="font-size:11px; color:#64748b;">0/0</span>
+        <button class="btn btn-secondary" id="search-prev-btn" style="padding:2px 6px;">▲</button>
+        <button class="btn btn-secondary" id="search-next-btn" style="padding:2px 6px;">▼</button>
+        <button class="btn btn-secondary" id="search-close-btn" style="padding:2px 6px;">✕</button>
+      </div>
+
+      <!-- Excel コンテナ -->
+      <div id="excel-view-wrapper" style="flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative;">
+        <div id="canvas-container">
+          <canvas id="excel-canvas"></canvas>
+        </div>
+        <div id="sheet-bar"></div>
+      </div>
+
+      <!-- Markdown コンテナ（スワップ用ダミー配置） -->
+      <div id="markdown-view-wrapper" style="flex:1; display:flex; flex-direction:column; overflow:hidden; background:#ffffff;">
+        <div class="panel-header" id="markdown-header-bar">
+          <div style="font-weight:bold; font-size:14.5px; display:flex; align-items:center; gap:8px;">
+            <span>✨ 構造化 Markdown</span>
+            <div class="tab-btn-group">
+              <button class="tab-btn" id="tab-raw-btn">Raw</button>
+              <button class="tab-btn" id="tab-outline-btn">アウトライン</button>
+              <button class="tab-btn active" id="tab-preview-btn">プレビュー</button>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-primary" id="copy-markdown-btn" style="padding:4px 12px;">コピー</button>
+          </div>
+        </div>
+        <div class="panel-subbar" style="gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+            <label class="scope-toggle-label" id="scope-toggle-wrapper" title="クリックで全シート結合と現在のシートを切り替え" style="flex-shrink: 0;">
+              <span class="toggle-text">全シート一括結合</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="scope-toggle-input">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+            <div id="markdown-sheet-bar" class="custom-scrollbar" style="display: flex; align-items: center; gap: 4px; overflow-x: auto; flex: 1; min-width: 0;"></div>
+          </div>
+          <span id="markdown-stats" style="color:#64748b; font-family:monospace; flex-shrink: 0;">約 0 文字</span>
+        </div>
+        <div class="panel-content">
+          <pre id="markdown-output"></pre>
+          <div id="markdown-outline"></div>
+          <div id="markdown-preview"></div>
+        </div>
+      </div>
+
+      <!-- ローディング表示 -->
+      <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p style="font-weight:600; color:#334155;">Excel ファイルを読み込み中...</p>
+      </div>
+
+      <!-- ドロップ案内オーバーレイ -->
+      <div id="drop-overlay">
+        <p style="font-size:18px; font-weight:bold;">ここに Excel (.xlsx) ファイルをドロップ</p>
+      </div>
+    </main>
+
+    <!-- サイドパネル (右側: 構造化Markdownビューワー) -->
+    <aside id="side-panel" class="open">
+      <!-- main.js の初期化処理で markdown-view-wrapper がマウントされます -->
+    </aside>
+  </div>
+
+  <!-- スライド用設定: 同一フォルダの本物Excelファイルを自動ロード -->
+  <script>
+    window.EXCEL_VIEWER_CONFIG = {
+      initialSheet: '2',
+      initialFile: {
+        enabled: true,
+        path: './AWSクラウド基盤_インフラパラメータ設計仕様書.xlsx',
+        name: 'AWSクラウド基盤_インフラパラメータ設計仕様書.xlsx'
+      },
+      ui: {
+        defaultSwapped: false,          // Excelが左、Markdownが右
+        sidePanelOpen: true,            // 左右両方を常時表示
+        defaultMarkdownScope: 'current',// 現在のシートを表示
+        defaultMarkdownTab: 'preview'   // 初期表示はプレビュー
+      }
+    };
+  </script>
+
+  <!-- メインスクリプト（CanvasExcelRenderer、DecompressionStream解凍、Markdown抽出） -->
+  <script src="../../../Tools/excel-viewer/main.js"></script>
+</body>
+
+</html>

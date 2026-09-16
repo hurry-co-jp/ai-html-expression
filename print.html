@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スライドプレゼンテーション</title>
+  <style>
+    @page {
+      size: 1920px 1080px;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #f8fafc;
+    }
+
+    /* 画面表示時のプレビューUI */
+    @media screen {
+      body {
+        padding: 2rem 1rem 4rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        overflow-y: auto;
+      }
+
+      .control-bar {
+        position: sticky;
+        top: 1rem;
+        z-index: 1000;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid #334155;
+        border-radius: 9999px;
+        padding: 0.65rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #94a3b8;
+      }
+
+      .status-badge.ready {
+        color: #4ade80;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #38bdf8;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .print-btn {
+        background: #0284c7;
+        color: #ffffff;
+        border: none;
+        padding: 0.45rem 1.15rem;
+        border-radius: 9999px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .print-btn:hover {
+        background: #0369a1;
+      }
+
+      .print-btn:disabled {
+        background: #475569;
+        cursor: not-allowed;
+      }
+
+      .page-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        width: 100%;
+      }
+
+      /* 外枠（プレビュー用 960x540 カード） */
+      .pdf-page-wrapper {
+        width: 960px;
+        height: 540px;
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid #1e293b;
+        background: #ffffff;
+      }
+
+      /* 実体（通常時と寸分違わない基準解像度 1920x1080 で固定レンダリング） */
+      .pdf-page {
+        width: 1920px;
+        height: 1080px;
+        transform-origin: top left;
+        transform: scale(0.5);
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: #ffffff;
+      }
+    }
+
+    /* 印刷時のスタイル (1920x1080 フルサイズ等倍出力) */
+    @media print {
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      .control-bar {
+        display: none !important;
+      }
+
+      .page-container {
+        display: block !important;
+        width: 1920px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .pdf-page-wrapper {
+        width: 1920px !important;
+        height: 1080px !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        overflow: hidden !important;
+        position: relative !important;
+        background: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .pdf-page-wrapper:last-child {
+        page-break-after: auto !important;
+      }
+
+      .pdf-page {
+        width: 1920px !important;
+        height: 1080px !important;
+        transform: none !important;
+        position: relative !important;
+        top: 0 !important;
+        left: 0 !important;
+        background: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+
+    iframe {
+      width: 1920px;
+      height: 1080px;
+      border: none;
+      display: block;
+      background: #ffffff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="control-bar" id="control-bar">
+    <div class="status-badge" id="status-badge">
+      <div class="spinner" id="spinner"></div>
+      <span id="status-text">スライドを読み込み中... (0/0)</span>
+    </div>
+    <button class="print-btn" id="print-btn" onclick="triggerPrint()" disabled>
+      🖨️ 印刷ダイアログを開く
+    </button>
+  </div>
+
+  <main class="page-container" id="page-container"></main>
+
+  <script type="module">
+    import { slideDeckConfig } from './slide_config.js';
+
+    const deckTitle = slideDeckConfig.deckTitle || "スライドプレゼンテーション";
+    document.title = deckTitle;
+
+    const rawSlides = slideDeckConfig.slides || [];
+    // skipPdf: true のスライドを除外
+    const pdfSlides = rawSlides.filter(slide => !(typeof slide === 'object' && slide.skipPdf));
+    const totalSlides = pdfSlides.length;
+
+    const pageContainer = document.getElementById('page-container');
+    const statusText = document.getElementById('status-text');
+    const statusBadge = document.getElementById('status-badge');
+    const spinner = document.getElementById('spinner');
+    const printBtn = document.getElementById('print-btn');
+
+    statusText.textContent = `スライドを読み込み中... (0/${totalSlides})`;
+
+    let loadedCount = 0;
+
+    // iframe および内部のネストされた iframe のロード完了を再帰的に監視
+    function waitForIframe(iframe) {
+      return new Promise((resolve) => {
+        let resolved = false;
+
+        const finish = () => {
+          if (resolved) return;
+          resolved = true;
+          resolve();
+        };
+
+        const checkContent = () => {
+          try {
+            const innerDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (innerDoc && (innerDoc.readyState === 'complete' || innerDoc.readyState === 'interactive')) {
+              // 内部に作例等のネストされた iframe があるか確認
+              const nestedIframes = Array.from(innerDoc.querySelectorAll('iframe'));
+              if (nestedIframes.length > 0) {
+                Promise.all(nestedIframes.map(waitForIframe)).then(finish);
+                return;
+              }
+              finish();
+              return;
+            }
+          } catch (e) {
+            // 同一オリジン外などの例外時はそのまま完了とみなす
+            finish();
+            return;
+          }
+          setTimeout(checkContent, 100);
+        };
+
+        iframe.addEventListener('load', () => {
+          checkContent();
+        }, { once: true });
+
+        // フォールバックタイムアウト（最長6秒で強制完了）
+        setTimeout(finish, 6000);
+      });
+    }
+
+    // 各スライドを DOM に動的生成（1920x1080 で固定レンダリング）
+    const loadPromises = pdfSlides.map((slide, index) => {
+      const slideUrl = typeof slide === 'string' ? slide : slide.url;
+      const normalizedUrl = slideUrl.startsWith('slides/') ? slideUrl : `slides/${slideUrl}`;
+
+      const wrapperDiv = document.createElement('div');
+      wrapperDiv.className = 'pdf-page-wrapper';
+
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'pdf-page';
+
+      const iframe = document.createElement('iframe');
+      iframe.src = normalizedUrl;
+      iframe.title = `Slide ${index + 1}`;
+
+      pageDiv.appendChild(iframe);
+      wrapperDiv.appendChild(pageDiv);
+      pageContainer.appendChild(wrapperDiv);
+
+      return waitForIframe(iframe).then(() => {
+        loadedCount++;
+        statusText.textContent = `スライドを読み込み中... (${loadedCount}/${totalSlides})`;
+      });
+    });
+
+    // 全スライドの読み込み完了待機
+    Promise.all(loadPromises).then(async () => {
+      // レンダリングやアニメーション安定のための待機バッファ（1秒）
+      await new Promise(r => setTimeout(r, 1000));
+
+      if (spinner) spinner.style.display = 'none';
+      statusBadge.classList.add('ready');
+      statusText.textContent = `全 ${totalSlides} 枚の読み込み完了`;
+      printBtn.disabled = false;
+    });
+
+    window.triggerPrint = function () {
+      window.print();
+    };
+  </script>
+</body>
+
+</html>

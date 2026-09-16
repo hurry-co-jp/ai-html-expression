@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デモ実演の前に</title>
+  <link rel="stylesheet" href="../theme/slide_theme.css">
+  <script src="../theme/slide_theme.js" defer></script>
+  <style>
+    .slide-content {
+      padding: 1.5rem 4rem 2rem 4rem !important;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* 注意喚起バナー */
+    .notice-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: #fffbeb;
+      border: 1.5px solid #fde68a;
+      border-radius: 0.6rem;
+      padding: 0.5rem 1.3rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #b45309;
+      width: fit-content;
+    }
+
+    .notice-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      width: 100%;
+    }
+
+    .notice-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 1rem;
+      padding: 1.3rem 2.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.03);
+      transition: border-color 0.2s;
+    }
+
+    .notice-card.warning {
+      background: #ffffff;
+    }
+
+    .notice-card.action {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .card-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .warning .card-title {
+      color: #b45309;
+    }
+
+    .action .card-title {
+      color: #065f46;
+    }
+
+    .card-body {
+      font-size: 1.9rem;
+      line-height: 1.45;
+      color: #334155;
+      padding-left: 2.6rem;
+    }
+
+    .action .card-body {
+      color: #1e293b;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <h1>デモ実演の前に</h1>
+      <div class="slide-logo"></div>
+    </header>
+
+    <main class="slide-content">
+      <div class="notice-banner">
+        <span>⚠️ 実演にあたっての前提・位置づけ</span>
+      </div>
+
+      <div class="notice-cards">
+        <div class="notice-card warning">
+          <div class="card-header">
+            <span class="card-title">⚠️ 細かい技術解説はしません</span>
+          </div>
+          <div class="card-body">
+            操作を細かく解説するのではなく、<br>「HTMLならこんな表現もできる」と感じてもらう紹介です。
+          </div>
+        </div>
+
+        <div class="notice-card warning">
+          <div class="card-header">
+            <span class="card-title">⚠️ 高度なWebアプリ開発を目指す必要はありません</span>
+          </div>
+          <div class="card-body">
+            今回紹介するデモは趣味で結構な時間をかけて作り込んだものです。<br>最初からこれを目指す必要はありません。
+          </div>
+        </div>
+
+        <div class="notice-card action">
+          <div class="card-header">
+            <span class="card-title">💡 まずは身近な可視化から</span>
+          </div>
+          <div class="card-body">
+            アイデアとして持ち帰り、<br>まずは身近なちょっと可視化してみたいところから試してもらいたいです。
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="slide-footer"></footer>
+  </div>
+</body>
+
+</html>

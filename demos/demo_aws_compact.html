@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>作例④ AWS構成図ビューワー（デモ）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 0.35rem;
+      height: 0.35rem;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 0.25rem;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 p-2.5 sm:p-4 custom-scrollbar min-h-screen">
+
+  <div class="w-full max-w-[1540px] mx-auto space-y-2.5">
+
+    <!-- ヘッダーエリア -->
+    <header class="bg-white px-5 py-3.5 rounded-xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <span class="text-2xl">☁️</span>
+        <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+          AWS ECSコンテナ構成（Cloud Design Pattern）
+        </h1>
+      </div>
+
+      <div class="flex items-center gap-2 text-sm text-slate-500 font-mono">
+        <span class="bg-slate-50 border border-slate-200 px-3 py-1 rounded font-bold">
+          ノード: <strong id="node-count" class="text-slate-800 font-bold">0</strong>
+        </span>
+        <span class="bg-slate-50 border border-slate-200 px-3 py-1 rounded font-bold">
+          接続線: <strong id="conn-count" class="text-slate-800 font-bold">0</strong>
+        </span>
+      </div>
+    </header>
+
+    <!-- タブ切り替えバー -->
+    <div class="flex items-center justify-between gap-3 border-b border-slate-200 pb-2.5">
+      <div class="flex items-center gap-2.5">
+        <button id="btn-diagram" class="px-4 py-2 bg-sky-600 text-white font-bold text-sm rounded-lg shadow-xs transition flex items-center gap-2 cursor-pointer">
+          <span>☁️</span> アーキテクチャ図
+        </button>
+        <button id="btn-json" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 font-bold text-sm rounded-lg hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
+          <span>📜</span> 構成定義 (JSON)
+        </button>
+      </div>
+    </div>
+
+    <!-- メインレイアウト: 左Canvas ＋ 右インスペクタ -->
+    <div id="diagram-view-layout" class="flex flex-col lg:flex-row gap-3 items-start w-full relative">
+
+      <!-- 左側: Canvas 構成図表示領域 -->
+      <div class="flex-1 w-full bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex flex-col gap-1.5 min-w-0">
+        <div class="relative w-full h-[630px] bg-slate-50/50 rounded-lg overflow-hidden border border-slate-200">
+          <canvas id="diagram-canvas" class="w-full h-full block cursor-pointer"></canvas>
+        </div>
+      </div>
+
+      <!-- 右側: 詳細パラメータパネル（インスペクタ） -->
+      <div class="w-full lg:w-[410px] shrink-0 bg-white p-4.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col gap-3 custom-scrollbar overflow-y-auto h-[656px]">
+        <!-- パネルヘッダー -->
+        <div class="border-b border-slate-200 pb-2.5 flex items-center justify-between">
+          <div class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <span class="text-base">🔍</span> リソース詳細パラメータ
+          </div>
+          <span id="select-badge" class="text-xs px-2.5 py-1 rounded bg-slate-100 text-slate-600 font-mono font-bold">未選択</span>
+        </div>
+
+        <!-- パラメータ詳細表示コンテンツ -->
+        <div id="inspector-content" class="flex flex-col gap-3 text-sm">
+          <!-- 動的挿入 -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- JSONビューワ コンテナ -->
+    <section id="json-view-layout" class="hidden bg-slate-950 p-5 rounded-xl border border-slate-800 shadow-xs relative">
+      <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800">
+        <span class="text-sm font-mono text-emerald-400 font-bold">
+          aws_architecture.json
+        </span>
+        <button id="btn-copy-json" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-bold border border-slate-700 transition">
+          📋 JSONをコピー
+        </button>
+      </div>
+      <pre id="json-code" class="text-sm font-mono text-slate-300 overflow-auto max-h-[520px] leading-relaxed"></pre>
+    </section>
+
+  </div>
+
+  <!-- レンダラー読み込み -->
+  <script src="../../../Tools/aws-diagram/diagram_renderer.js"></script>
+
+  <script>
+    const DIAGRAM_DATA = {
+  "title": "AWS ECSコンテナ構成 (Cloud Design Pattern)",
+  "description": "AWS公式CDPに基づいたコンテナアーキテクチャ（Fargate, Multi-AZ RDS, CloudWatch連携）",
+  "groups": [
+    {
+      "id": "aws-cloud",
+      "label": "AWS Cloud",
+      "x": 20,
+      "y": 15,
+      "w": 1050,
+      "h": 665,
+      "bgColor": "#ffffff",
+      "borderColor": "#0f172a",
+      "lineWidth": 1.5,
+      "dashed": false
+    },
+    {
+      "id": "region",
+      "label": "Region",
+      "x": 40,
+      "y": 105,
+      "w": 670,
+      "h": 555,
+      "bgColor": "transparent",
+      "borderColor": "#0284c7",
+      "lineWidth": 1.5,
+      "dashed": true
+    },
+    {
+      "id": "az-a",
+      "label": "Availability Zone A",
+      "x": 55,
+      "y": 135,
+      "w": 290,
+      "h": 510,
+      "bgColor": "transparent",
+      "borderColor": "#94a3b8",
+      "lineWidth": 1,
+      "dashed": true
+    },
+    {
+      "id": "az-c",
+      "label": "Availability Zone C",
+      "x": 380,
+      "y": 135,
+      "w": 315,
+      "h": 510,
+      "bgColor": "transparent",
+      "borderColor": "#94a3b8",
+      "lineWidth": 1,
+      "dashed": true
+    },
+    {
+      "id": "public-subnet",
+      "label": "Public subnet",
+      "x": 70,
+      "y": 165,
+      "w": 610,
+      "h": 120,
+      "bgColor": "rgba(240, 253, 244, 0.8)",
+      "borderColor": "#4ade80",
+      "lineWidth": 1.2,
+      "dashed": false
+    },
+    {
+      "id": "private-subnet",
+      "label": "Private subnet",
+      "x": 70,
+      "y": 305,
+      "w": 610,
+      "h": 205,
+      "bgColor": "rgba(240, 249, 255, 0.8)",
+      "borderColor": "#38bdf8",
+      "lineWidth": 1.2,
+      "dashed": false
+    },
+    {
+      "id": "db-subnet",
+      "label": "Database / Cache Subnet",
+      "x": 70,
+      "y": 530,
+      "w": 610,
+      "h": 95,
+      "bgColor": "rgba(248, 250, 252, 0.6)",
+      "borderColor": "#0284c7",
+      "lineWidth": 1.2,
+      "dashed": true
+    },
+    {
+      "id": "mgmt-group",
+      "label": "Management & Monitoring",
+      "x": 735,
+      "y": 305,
+      "w": 315,
+      "h": 285,
+      "bgColor": "rgba(248, 250, 252, 0.6)",
+      "borderColor": "#475569",
+      "lineWidth": 1.2,
+      "dashed": true
+    }
+  ],
+  "annotations": [
+    {
+      "text": "タスクを維持・戦略に基づき\nスケジュールする設定定義",
+      "x": 48,
+      "y": 318,
+      "w": 130,
+      "h": 36,
+      "bgColor": "rgba(255, 255, 255, 0.95)",
+      "borderColor": "#ea580c",
+      "textColor": "#c2410c"
+    },
+    {
+      "text": "アプリケーションを構築する\n1つ以上のコンテナ群の定義",
+      "x": 48,
+      "y": 420,
+      "w": 130,
+      "h": 36,
+      "bgColor": "rgba(255, 255, 255, 0.95)",
+      "borderColor": "#ea580c",
+      "textColor": "#c2410c"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cloudfront",
+      "name": "CloudFront",
+      "type": "Amazon CloudFront",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/NetworkingContentDelivery/CloudFront.png",
+      "x": 280,
+      "y": 28,
+      "w": 120,
+      "h": 65,
+      "params": {
+        "ディストリビューション": "d111111abcdef8.cloudfront.net",
+        "オリジン": "ELB (Elastic Load Balancing)",
+        "キャッシュポリシー": "Managed-CachingOptimized",
+        "ビューワープロトコル": "Redirect HTTP to HTTPS (TLS 1.3)"
+      }
+    },
+    {
+      "id": "acm",
+      "name": "ACM",
+      "type": "Certificate Manager",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/SecurityIdentityCompliance/CertificateManager.png",
+      "x": 440,
+      "y": 28,
+      "w": 120,
+      "h": 65,
+      "params": {
+        "証明書ステータス": "Issued (有効)",
+        "ドメイン名": "example.com / *.example.com",
+        "検証タイプ": "DNS 検証 (Route 53 自動連携)"
+      }
+    },
+    {
+      "id": "nat-gw-a",
+      "name": "NAT gateway",
+      "type": "AZ-A Gateway",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/NetworkingContentDelivery/VPCNATGateway.png",
+      "x": 120,
+      "y": 190,
+      "w": 100,
+      "h": 80,
+      "params": {
+        "Elastic IP": "54.xxx.xxx.12",
+        "サブネット": "Public Subnet AZ-a",
+        "ルーティング": "Private Subnet からの外部通信 (パッケージ更新・API通信用)"
+      }
+    },
+    {
+      "id": "elb",
+      "name": "ALB",
+      "type": "Elastic Load Balancing",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/NetworkingContentDelivery/ElasticLoadBalancing.png",
+      "x": 325,
+      "y": 185,
+      "w": 110,
+      "h": 85,
+      "params": {
+        "スキーム": "internet-facing",
+        "リスナー": "HTTPS:443 (ACM証明書適用)",
+        "ルーティング": "Fargate ターゲットグループ (tg-nginx:80)",
+        "ヘルスチェック": "GET /healthz (間隔: 15s)"
+      }
+    },
+    {
+      "id": "nat-gw-c",
+      "name": "NAT gateway",
+      "type": "AZ-C Gateway",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/NetworkingContentDelivery/VPCNATGateway.png",
+      "x": 520,
+      "y": 190,
+      "w": 100,
+      "h": 80,
+      "params": {
+        "Elastic IP": "54.xxx.xxx.34",
+        "サブネット": "Public Subnet AZ-c",
+        "冗長化": "マルチAZ NAT 構成"
+      }
+    },
+    {
+      "id": "fargate-a",
+      "name": "AWS Fargate",
+      "type": "AZ-a (Nginx / PHP-FPM)",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Containers/Fargate.png",
+      "x": 185,
+      "y": 340,
+      "w": 130,
+      "h": 90,
+      "params": {
+        "タスク構成": "Nginx コンテナ + PHP-FPM コンテナ (マルチコンテナタスク)",
+        "起動タイプ": "AWS Fargate",
+        "割り当てスペック": "1.0 vCPU / 2048 MB",
+        "ネットワークモード": "awsvpc",
+        "ログ送信先": "awslogs (CloudWatch Logs)"
+      }
+    },
+    {
+      "id": "fargate-c",
+      "name": "AWS Fargate",
+      "type": "AZ-c (Nginx / PHP-FPM)",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Containers/Fargate.png",
+      "x": 395,
+      "y": 340,
+      "w": 130,
+      "h": 90,
+      "params": {
+        "タスク構成": "Nginx コンテナ + PHP-FPM コンテナ",
+        "起動タイプ": "AWS Fargate",
+        "AZ": "ap-northeast-1c",
+        "冗長性": "マルチAZ 自動フェイルオーバー / 負荷分散"
+      }
+    },
+    {
+      "id": "autoscaling",
+      "name": "Auto Scaling",
+      "type": "Application Auto Scaling",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/ManagementGovernance/AutoScaling.png",
+      "x": 565,
+      "y": 345,
+      "w": 100,
+      "h": 80,
+      "params": {
+        "スケーリングターゲット": "ECS Service (DesiredCount)",
+        "ポリシー": "Target Tracking (ALB RequestCountPerTarget > 1000 または CPU > 65%)",
+        "Min / Max": "2 タスク / 20 タスク"
+      }
+    },
+    {
+      "id": "rds-primary",
+      "name": "Amazon RDS",
+      "type": "Primary (AZ-a)",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Database/RDS.png",
+      "x": 100,
+      "y": 555,
+      "w": 100,
+      "h": 65,
+      "params": {
+        "エンジン": "MySQL 8.0 (Multi-AZ 有効)",
+        "役割": "Primary Instance (Read/Write)",
+        "インスタンスクラス": "db.m6g.large (2 vCPU / 8 GiB)",
+        "ストレージ": "gp3 100 GiB (自動拡張有効)"
+      }
+    },
+    {
+      "id": "elasticache-primary",
+      "name": "ElastiCache",
+      "type": "Primary (AZ-a)",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Database/ElastiCache.png",
+      "x": 220,
+      "y": 555,
+      "w": 100,
+      "h": 65,
+      "params": {
+        "エンジン": "Redis 7.0 (Cluster Mode Disabled)",
+        "ノード": "cache.m6g.large (Primary)",
+        "用途": "セッション管理 / キャッシュストア"
+      }
+    },
+    {
+      "id": "rds-standby",
+      "name": "Amazon RDS",
+      "type": "Standby (AZ-c)",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Database/RDS.png",
+      "x": 415,
+      "y": 555,
+      "w": 100,
+      "h": 65,
+      "params": {
+        "役割": "Standby Instance (同期レプリケーション)",
+        "AZ": "ap-northeast-1c",
+        "フェイルオーバー": "Primary 障害時に自動昇格 (DNS切り替え)"
+      }
+    },
+    {
+      "id": "elasticache-replica",
+      "name": "ElastiCache",
+      "type": "Replica (AZ-c)",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Database/ElastiCache.png",
+      "x": 535,
+      "y": 555,
+      "w": 100,
+      "h": 65,
+      "params": {
+        "役割": "Read Replica (非同期レプリケーション)",
+        "AZ": "ap-northeast-1c",
+        "自動フェイルオーバー": "有効"
+      }
+    },
+    {
+      "id": "s3",
+      "name": "Amazon S3",
+      "type": "Simple Storage Service",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Storage/SimpleStorageService.png",
+      "x": 760,
+      "y": 120,
+      "w": 110,
+      "h": 85,
+      "params": {
+        "用途": "静的コンテンツ (HTML/CSS/JS) / アップロードメディア",
+        "アクセス制限": "CloudFront OAC (Origin Access Control) のみ許可",
+        "暗号化": "SSE-S3 (AES-256)"
+      }
+    },
+    {
+      "id": "ecr",
+      "name": "Amazon ECR",
+      "type": "Container Registry",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Containers/ElasticContainerRegistry.png",
+      "x": 900,
+      "y": 195,
+      "w": 110,
+      "h": 85,
+      "params": {
+        "リポジトリ": "app/nginx, app/php-fpm",
+        "イメージタグの変更不可性": "IMMUTABLE (タグ上書き禁止)",
+        "スキャン設定": "Push 時に自動脆弱性スキャン (Enhanced Scanning)"
+      }
+    },
+    {
+      "id": "ecs-cluster",
+      "name": "ECS クラスター",
+      "type": "Amazon ECS",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/Containers/ElasticContainerService.png",
+      "x": 750,
+      "y": 330,
+      "w": 100,
+      "h": 75,
+      "params": {
+        "クラスター名": "production-ecs-cluster",
+        "Capacity Provider": "FARGATE, FARGATE_SPOT",
+        "Container Insights": "Enabled (メトリクス収集)"
+      }
+    },
+    {
+      "id": "cloudwatch",
+      "name": "CloudWatch",
+      "type": "Amazon CloudWatch",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/ManagementGovernance/CloudWatch.png",
+      "x": 845,
+      "y": 330,
+      "w": 100,
+      "h": 75,
+      "params": {
+        "メトリクス": "CPU, Memory, Network, RequestCount",
+        "アラーム": "Slack / PagerDuty 通知連携 (SNS経由)"
+      }
+    },
+    {
+      "id": "cw-logs",
+      "name": "CloudWatch Logs",
+      "type": "Log Streams",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/ManagementGovernance/CloudWatch.png",
+      "x": 845,
+      "y": 425,
+      "w": 140,
+      "h": 70,
+      "params": {
+        "ロググループ": "/ecs/app-production",
+        "保持期間": "90日間 (以降 S3 Glacier へアーカイブ)",
+        "メトリクスフィルター": "HTTP 5xx エラー抽出"
+      }
+    },
+    {
+      "id": "cw-insights",
+      "name": "Container Insights",
+      "type": "ECS Monitoring",
+      "icon": "https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist/ManagementGovernance/CloudWatch.png",
+      "x": 845,
+      "y": 510,
+      "w": 140,
+      "h": 70,
+      "params": {
+        "収集対象": "タスク/サービス/コンテナ単位の詳細パフォーマンス",
+        "マップ機能": "コンテナトポロジー自動可視化"
+      }
+    }
+  ],
+  "connections": [
+    { "from": "cloudfront", "to": "elb", "label": "Origin Route" },
+    {
+      "from": "cloudfront",
+      "to": "s3",
+      "label": "Static Assets",
+      "dashed": true,
+      "waypoints": [
+        { "x": 580, "y": 45 },
+        { "x": 720, "y": 60 }
+      ]
+    },
+    { "from": "elb", "to": "fargate-a", "label": "HTTP :80" },
+    { "from": "elb", "to": "fargate-c", "label": "HTTP :80" },
+    { "from": "fargate-a", "to": "rds-primary", "label": "SQL (Write)" },
+    { "from": "fargate-a", "to": "elasticache-primary", "label": "Redis" },
+    {
+      "from": "fargate-c",
+      "to": "rds-primary",
+      "label": "SQL (Write)",
+      "waypoints": [{ "x": 340, "y": 480 }]
+    },
+    {
+      "from": "fargate-c",
+      "to": "elasticache-primary",
+      "label": "Redis",
+      "waypoints": [{ "x": 360, "y": 460 }]
+    },
+    { "from": "rds-primary", "to": "rds-standby", "label": "Sync", "dashed": true },
+    { "from": "elasticache-primary", "to": "elasticache-replica", "label": "Replication", "dashed": true },
+    {
+      "from": "ecr",
+      "to": "fargate-a",
+      "label": "Pull Image",
+      "dashed": true,
+      "waypoints": [
+        { "x": 780, "y": 240 },
+        { "x": 380, "y": 298 }
+      ]
+    },
+    {
+      "from": "ecr",
+      "to": "fargate-c",
+      "label": "Pull Image",
+      "dashed": true,
+      "waypoints": [{ "x": 760, "y": 260 }]
+    },
+    {
+      "from": "fargate-a",
+      "to": "cw-logs",
+      "label": "App Logs",
+      "waypoints": [{ "x": 530, "y": 445 }]
+    },
+    {
+      "from": "fargate-c",
+      "to": "cw-insights",
+      "label": "Metrics",
+      "waypoints": [{ "x": 680, "y": 490 }]
+    }
+  ]
+}
+;
+
+    window.addEventListener('load', () => {
+      const renderer = new AwsDiagramRenderer({
+        canvas: 'diagram-canvas',
+        inspector: 'inspector-content',
+        selectBadge: 'select-badge',
+        nodeCount: 'node-count',
+        connCount: 'conn-count'
+      });
+
+      renderer.setData(DIAGRAM_DATA, 'alb');
+      renderer.scale = 0.82;
+      renderer.offsetX = 15;
+      renderer.offsetY = 15;
+      renderer.render();
+
+      // タブ切り替え制御
+      const btnDiagram = document.getElementById('btn-diagram');
+      const btnJson = document.getElementById('btn-json');
+      const diagramLayout = document.getElementById('diagram-view-layout');
+      const jsonLayout = document.getElementById('json-view-layout');
+      const jsonCode = document.getElementById('json-code');
+
+      jsonCode.textContent = JSON.stringify(DIAGRAM_DATA, null, 2);
+
+      btnDiagram.addEventListener('click', () => {
+        btnDiagram.className = "px-3.5 py-1.5 bg-sky-600 text-white font-bold text-xs rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer";
+        btnJson.className = "px-3.5 py-1.5 bg-white border border-slate-300 text-slate-700 font-bold text-xs rounded-lg hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer";
+        diagramLayout.classList.remove('hidden');
+        jsonLayout.classList.add('hidden');
+      });
+
+      btnJson.addEventListener('click', () => {
+        btnJson.className = "px-3.5 py-1.5 bg-sky-600 text-white font-bold text-xs rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer";
+        btnDiagram.className = "px-3.5 py-1.5 bg-white border border-slate-300 text-slate-700 font-bold text-xs rounded-lg hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer";
+        jsonLayout.classList.remove('hidden');
+        diagramLayout.classList.add('hidden');
+      });
+
+      document.getElementById('btn-copy-json').addEventListener('click', () => {
+        navigator.clipboard.writeText(JSON.stringify(DIAGRAM_DATA, null, 2)).then(() => {
+          const btn = document.getElementById('btn-copy-json');
+          btn.innerText = '✅ コピー完了！';
+          setTimeout(() => btn.innerText = '📋 JSONをコピー', 2000);
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

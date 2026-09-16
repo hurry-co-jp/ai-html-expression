@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Git よく使う操作・Canvas 図解リファレンス</title>
+  <meta name="description" content="日常の開発で頻出する Git の操作手順を、状態遷移とコミットグラフの 3 ステップ横並び図解で分かりやすく一覧できるリファレンスです。">
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-code: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --accent-blue: #0284c7;
+      --accent-green: #059669;
+      --accent-amber: #d97706;
+      --accent-purple: #7c3aed;
+      --accent-rose: #e11d48;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    }
+
+    html {
+      font-size: 17px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      line-height: 1.6;
+      padding: 1rem 1.25rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 1.25rem;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lead {
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .legend-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      margin-top: 0.6rem;
+      padding: 0.4rem 0.8rem;
+      background-color: var(--bg-card);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      font-size: 0.82rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .tip-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .tip-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .tip-num {
+      background-color: #e0f2fe;
+      color: var(--accent-blue);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      border: 1px solid #bae6fd;
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .tip-desc {
+      color: var(--text-sub);
+      margin-bottom: 1.25rem;
+      font-size: 1.0rem;
+    }
+
+    /* 3 ステップ横並びグリッド */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (max-width: 900px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-col {
+      background-color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .step-header {
+      padding: 0.6rem 0.9rem;
+      background-color: #f8fafc;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-badge {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+      text-align: center;
+      background-color: var(--accent-blue);
+      color: #ffffff;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .canvas-wrap {
+      width: 100%;
+      height: 210px;
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .step-footer {
+      padding: 0.75rem 0.9rem;
+      font-size: 0.92rem;
+      color: var(--text-sub);
+      background-color: #ffffff;
+      flex-grow: 1;
+      line-height: 1.5;
+    }
+
+    .code-box {
+      background-color: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      position: relative;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      font-size: 0.95rem;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+
+    .code-box pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .code-comment {
+      color: #64748b;
+    }
+
+    .code-cmd {
+      color: #0284c7;
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      background-color: #ffffff;
+      color: var(--text-sub);
+      border: 1px solid var(--border-color);
+      padding: 0.3rem 0.7rem;
+      font-size: 0.82rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-main);
+      border-color: #94a3b8;
+    }
+
+    .note-box {
+      margin-top: 1rem;
+      font-size: 0.92rem;
+      color: var(--text-sub);
+      background-color: #f8fafc;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1><span>Git よく使う操作</span> Canvas 図解リファレンス</h1>
+      <p class="lead">日常の開発で頻出する操作手順を、状態の推移（1. 発生時 → 2. コマンド実行 → 3. 完了後）が一目でわかる 3 ステップ横並び図解で整理しました。</p>
+      
+      <div class="legend-bar">
+        <div class="legend-item">
+          <div class="legend-dot" style="background-color: var(--accent-blue);"></div>
+          <span>作業ツリー（未ステージ）</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background-color: var(--accent-amber);"></div>
+          <span>ステージング領域</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background-color: var(--accent-green);"></div>
+          <span>ローカルコミット</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background-color: var(--accent-purple);"></div>
+          <span>リモートリポジトリ（@{u}）</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tip 1 -->
+    <section class="tip-card" id="tip-1">
+      <div class="tip-header">
+        <span class="tip-num">01</span>
+        <h2>add したファイルを取り消したい（ステージング解除）</h2>
+      </div>
+      <p class="tip-desc">うっかり余計なファイルをステージングしてしまった際に、作業ツリーの編集内容は残したままステージング領域からのみ外します。</p>
+
+      <div class="steps-grid">
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">1</span> 誤って add 済み</div>
+          <div class="canvas-wrap"><canvas id="c-1-1"></canvas></div>
+          <div class="step-footer">ファイルが誤ってステージング領域に登録されている状態です。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">2</span> restore --staged 実行</div>
+          <div class="canvas-wrap"><canvas id="c-1-2"></canvas></div>
+          <div class="step-footer">git restore --staged を実行。ステージングからファイルが作業ツリーへ押し戻されます。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">3</span> ステージング解除完了</div>
+          <div class="canvas-wrap"><canvas id="c-1-3"></canvas></div>
+          <div class="step-footer">ステージング領域が空になり、作業ツリーの編集内容は安全に保持されています。</div>
+        </div>
+      </div>
+
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyCode(this)">コピー</button>
+        <pre><span class="code-comment"># 特定ファイルのみステージングを解除（作業ツリーの編集内容は保持）</span>
+<span class="code-cmd">git restore --staged</span> &lt;ファイルパス&gt;
+
+<span class="code-comment"># すべてのファイルを一括でステージング解除</span>
+<span class="code-cmd">git restore --staged .</span></pre>
+      </div>
+    </section>
+
+    <!-- Tip 2 -->
+    <section class="tip-card" id="tip-2">
+      <div class="tip-header">
+        <span class="tip-num">02</span>
+        <h2>直前のコミットから特定のファイルだけ取り消したい</h2>
+      </div>
+      <p class="tip-desc">直前のコミットに対象外のファイルを含めてしまった場合、そのファイルを作業ツリーへ戻しつつ、コミットを上書き修正します。</p>
+
+      <div class="steps-grid">
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">1</span> 不要ファイルが混入</div>
+          <div class="canvas-wrap"><canvas id="c-2-1"></canvas></div>
+          <div class="step-footer">直前コミットに対象外ファイル（file-b）が誤って一緒にコミットされた状態です。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">2</span> 過去コミットから展開</div>
+          <div class="canvas-wrap"><canvas id="c-2-2"></canvas></div>
+          <div class="step-footer">1 つ前の親コミットから file-b の状態をステージング領域へ上書き展開します。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">3</span> amend で除外して完成</div>
+          <div class="canvas-wrap"><canvas id="c-2-3"></canvas></div>
+          <div class="step-footer">git commit --amend により、file-a のみの新しいコミットへ差し替え完了しました。</div>
+        </div>
+      </div>
+
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyCode(this)">コピー</button>
+        <pre><span class="code-comment"># 1. 1 つ前のコミット（HEAD~1）の状態をステージング領域へ上書き</span>
+<span class="code-cmd">git restore --staged --source=HEAD~1</span> &lt;除外したいファイルパス&gt;
+
+<span class="code-comment"># 2. 直前のコミットをメッセージ変更なしで上書き</span>
+<span class="code-cmd">git commit --amend --no-edit</span></pre>
+      </div>
+      <div class="note-box">
+        ※ 対象ファイルは未ステージングの編集状態として作業ツリーに残るため、コードが消滅することはありません。
+      </div>
+    </section>
+
+    <!-- Tip 3 -->
+    <section class="tip-card" id="tip-3">
+      <div class="tip-header">
+        <span class="tip-num">03</span>
+        <h2>最新のリモートを Pull する前にコミットして Push したい時</h2>
+      </div>
+      <p class="tip-desc">リモートに新しいコミットが存在し Push が拒否された際、履歴を一本の直線に保つ `pull --rebase` で綺麗に統合して送信します。</p>
+
+      <div class="steps-grid">
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">1</span> ローカルとリモートの分岐</div>
+          <div class="canvas-wrap"><canvas id="c-3-1"></canvas></div>
+          <div class="step-footer">リモート側に別メンバーのコミット [R1] が追加されており、ローカル [L1] と分岐しています。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">2</span> pull --rebase 実行</div>
+          <div class="canvas-wrap"><canvas id="c-3-2"></canvas></div>
+          <div class="step-footer">git pull --rebase を実行。ローカルコミット [L1] をリモート最新 [R1] の後ろへ付け替えます。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">3</span> 一直線になり Push 完了</div>
+          <div class="canvas-wrap"><canvas id="c-3-3"></canvas></div>
+          <div class="step-footer">履歴が一直線になり、競合なくスムーズに Push が完了します。</div>
+        </div>
+      </div>
+
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyCode(this)">コピー</button>
+        <pre><span class="code-comment"># 1. リモートの最新変更を自分のコミットの後ろに付け替える（リベース）</span>
+<span class="code-cmd">git pull --rebase origin</span> &lt;ブランチ名&gt;
+
+<span class="code-comment"># 2. そのままリモートへ送信</span>
+<span class="code-cmd">git push origin</span> &lt;ブランチ名&gt;
+
+<span class="code-comment"># ※ 競合が出た場合は修正して git add 後に git rebase --continue を実行</span></pre>
+      </div>
+    </section>
+
+    <!-- Tip 4 -->
+    <section class="tip-card" id="tip-4">
+      <div class="tip-header">
+        <span class="tip-num">04</span>
+        <h2>特定のファイルのみの変更履歴を見たい</h2>
+      </div>
+      <p class="tip-desc">プロジェクト全体のログではなく、該当ファイルがいつ・どのように変更されてきたかをピンポイントで調査します。</p>
+
+      <div class="steps-grid">
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">1</span> プロジェクト全体の履歴</div>
+          <div class="canvas-wrap"><canvas id="c-4-1"></canvas></div>
+          <div class="step-footer">全体コミットのうち、対象ファイルに関係するコミットと無関係なものが混在しています。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">2</span> 対象のコミットを抽出</div>
+          <div class="canvas-wrap"><canvas id="c-4-2"></canvas></div>
+          <div class="step-footer">git log &lt;ファイルパス&gt; により、該当ファイルに変更があったコミットのみを抽出します。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">3</span> 変更差分付きで確認</div>
+          <div class="canvas-wrap"><canvas id="c-4-3"></canvas></div>
+          <div class="step-footer">-p オプションにより、抽出したコミットごとの差分（追加・削除行）も同時に確認できます。</div>
+        </div>
+      </div>
+
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyCode(this)">コピー</button>
+        <pre><span class="code-comment"># 特定ファイルが関係するコミット履歴のみを 1 行ずつ表示</span>
+<span class="code-cmd">git log --oneline</span> &lt;ファイルパス&gt;
+
+<span class="code-comment"># それぞれのコミットでの変更差分（diff）も同時に表示</span>
+<span class="code-cmd">git log -p</span> &lt;ファイルパス&gt;
+
+<span class="code-comment"># リネーム前の過去履歴も追跡して表示</span>
+<span class="code-cmd">git log --follow --oneline</span> &lt;ファイルパス&gt;</pre>
+      </div>
+    </section>
+
+    <!-- Tip 5 -->
+    <section class="tip-card" id="tip-5">
+      <div class="tip-header">
+        <span class="tip-num">05</span>
+        <h2>特定のファイルのみ、特定のブランチとの差分を見たい</h2>
+      </div>
+      <p class="tip-desc">現在作業中のブランチと main ブランチの間で、指定したファイルだけがどう変更されているかを比較します。</p>
+
+      <div class="steps-grid">
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">1</span> ブランチ間の差分指定</div>
+          <div class="canvas-wrap"><canvas id="c-5-1"></canvas></div>
+          <div class="step-footer">main ブランチと現在のブランチを指定し、特定ファイルのみを比較対象にします。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">2</span> ファイルの中身を比較</div>
+          <div class="canvas-wrap"><canvas id="c-5-2"></canvas></div>
+          <div class="step-footer">2 つのブランチにおける該当ファイルの中身を行単位で比較照合します。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">3</span> 追加行・削除行の可視化</div>
+          <div class="canvas-wrap"><canvas id="c-5-3"></canvas></div>
+          <div class="step-footer">緑色（+ 追加行）と赤色（- 削除行）で変更箇所が明確に対比表示されます。</div>
+        </div>
+      </div>
+
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyCode(this)">コピー</button>
+        <pre><span class="code-comment"># 現在の作業ブランチと main ブランチ間で特定ファイルの差分を表示</span>
+<span class="code-cmd">git diff main --</span> &lt;ファイルパス&gt;
+
+<span class="code-comment"># 任意の 2 つのブランチ同士で特定ファイルの差分を表示</span>
+<span class="code-cmd">git diff feature-a feature-b --</span> &lt;ファイルパス&gt;</pre>
+      </div>
+    </section>
+
+    <!-- Tip 6 -->
+    <section class="tip-card" id="tip-6">
+      <div class="tip-header">
+        <span class="tip-num">06</span>
+        <h2>ローカルで Push 前にコミットしたものを 1 つにまとめたい</h2>
+      </div>
+      <p class="tip-desc">追跡リモート地点（`@{u}`）を指定することで、コミット件数を自分で数えることなく、前回の Push 地点以降の未送信コミットをすべて 1 発で統合できます。</p>
+
+      <div class="steps-grid">
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">1</span> Push 後に WIP が複数</div>
+          <div class="canvas-wrap"><canvas id="c-6-1"></canvas></div>
+          <div class="step-footer">前回の Push 地点（@{u}）から、ローカルに細かいコミットが積み上がっている状態です。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">2</span> reset --soft @{u}</div>
+          <div class="canvas-wrap"><canvas id="c-6-2"></canvas></div>
+          <div class="step-footer">件数を数えることなく、@{u} までの未送信差分がステージング領域へ一括集約されます。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">3</span> 1 つの綺麗なコミットへ</div>
+          <div class="canvas-wrap"><canvas id="c-6-3"></canvas></div>
+          <div class="step-footer">改めてコミットを作成。Push 済み地点の直後に 1 本の綺麗なコミットとして完成します。</div>
+        </div>
+      </div>
+
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyCode(this)">コピー</button>
+        <pre><span class="code-comment"># 1. 最後に同期したリモート地点まで一括巻き戻し（何件あっても自動認識）</span>
+<span class="code-cmd">git reset --soft @{u}</span>
+
+<span class="code-comment"># 2. 改めて 1 つのまとまったコミットを作成</span>
+<span class="code-cmd">git commit -m "feat: ○○機能を実装"</span>
+
+<span class="code-comment"># ※ main から分岐した作業コミットをすべてまとめたい場合:</span>
+<span class="code-cmd">git reset --soft origin/main</span></pre>
+      </div>
+      <div class="note-box">
+        ※ <strong>`@{u}`</strong> は現在ブランチの追跡リモートブランチ（上流ブランチ）を表すため、件数を手作業で数える必要が一切ありません。
+      </div>
+    </section>
+
+    <!-- Tip 7 -->
+    <section class="tip-card" id="tip-7">
+      <div class="tip-header">
+        <span class="tip-num">07</span>
+        <h2>コミットメッセージを修正したい</h2>
+      </div>
+      <p class="tip-desc">タイポや記述漏れがあったコミットメッセージを、Push 前の段階で手軽に修正・上書きします。</p>
+
+      <div class="steps-grid">
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">1</span> メッセージに誤字がある状態</div>
+          <div class="canvas-wrap"><canvas id="c-7-1"></canvas></div>
+          <div class="step-footer">コミット「feat: ユーザ認証追加（タイポあり）」のメッセージに誤字がある状態です。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">2</span> git commit --amend 実行</div>
+          <div class="canvas-wrap"><canvas id="c-7-2"></canvas></div>
+          <div class="step-footer">git commit --amend を実行し、既存のコミットのメタデータを上書き修正します。</div>
+        </div>
+        <div class="step-col">
+          <div class="step-header"><span class="step-badge">3</span> メッセージ修正完了</div>
+          <div class="canvas-wrap"><canvas id="c-7-3"></canvas></div>
+          <div class="step-footer">正しいメッセージが反映された新しいコミットに差し替えが完了しました。</div>
+        </div>
+      </div>
+
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyCode(this)">コピー</button>
+        <pre><span class="code-comment"># 直前のコミットメッセージを新しいメッセージへ直接上書き</span>
+<span class="code-cmd">git commit --amend -m "正しいコミットメッセージ"</span>
+
+<span class="code-comment"># エディタを起動して複数行メッセージを編集したい場合</span>
+<span class="code-cmd">git commit --amend</span></pre>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function initCanvas(id) {
+      const canvas = document.getElementById(id);
+      if (!canvas) return null;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, rect.width, rect.height);
+      return { ctx, width: rect.width, height: rect.height };
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (stroke) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+
+    function drawArrow(ctx, fromX, fromY, toX, toY, color, label) {
+      const headlen = 10;
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.fill();
+
+      if (label) {
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillStyle = color;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const midX = (fromX + toX) / 2;
+        const midY = (fromY + toY) / 2 - 12;
+        ctx.fillText(label, midX, midY);
+      }
+    }
+
+    function drawNode(ctx, x, y, text, color, radius = 36) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = (color === "#94a3b8" || color === "#cbd5e1" || color === "#64748b") ? "#334155" : color;
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x, y);
+    }
+
+    // --- Tip 1 ---
+    function drawTip1(step) {
+      const res = initCanvas(`c-1-${step}`);
+      if (!res) return;
+      const { ctx, width, height } = res;
+
+      const boxW = width * 0.42;
+      const boxH = height * 0.74;
+      const boxY = (height - boxH) / 2;
+      const leftX = width * 0.05;
+      const rightX = width * 0.53;
+
+      roundRect(ctx, leftX, boxY, boxW, boxH, 8, "#f0f9ff", "#0284c7");
+      ctx.font = "bold 14px sans-serif";
+      ctx.fillStyle = "#0369a1";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("作業ツリー", leftX + boxW / 2, boxY + 22);
+
+      roundRect(ctx, rightX, boxY, boxW, boxH, 8, "#fffbeb", "#d97706");
+      ctx.fillStyle = "#b45309";
+      ctx.fillText("ステージング領域", rightX + boxW / 2, boxY + 22);
+
+      const fileW = boxW * 0.86;
+      const fileH = 40;
+      const fileY = boxY + 44;
+
+      if (step === 1) {
+        roundRect(ctx, rightX + (boxW - fileW) / 2, fileY, fileW, fileH, 5, "#fef3c7", "#d97706");
+        ctx.fillStyle = "#92400e";
+        ctx.font = "bold 13px monospace";
+        ctx.fillText("target_file.js", rightX + boxW / 2, fileY + 20);
+        ctx.fillStyle = "#b45309";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("ステージ済み", rightX + boxW / 2, fileY + fileH + 20);
+      } else if (step === 2) {
+        drawArrow(ctx, rightX, fileY + fileH / 2, leftX + boxW, fileY + fileH / 2, "#0284c7", "restore");
+        roundRect(ctx, rightX + (boxW - fileW) / 2, fileY, fileW, fileH, 5, "#fef3c7", "#d97706");
+        ctx.fillStyle = "#92400e";
+        ctx.font = "bold 13px monospace";
+        ctx.fillText("target_file.js", rightX + boxW / 2, fileY + 20);
+      } else if (step === 3) {
+        roundRect(ctx, leftX + (boxW - fileW) / 2, fileY, fileW, fileH, 5, "#e0f2fe", "#0284c7");
+        ctx.fillStyle = "#0369a1";
+        ctx.font = "bold 13px monospace";
+        ctx.fillText("target_file.js", leftX + boxW / 2, fileY + 20);
+        ctx.fillStyle = "#059669";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("✓ 編集内容保持", leftX + boxW / 2, fileY + fileH + 20);
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("（空）", rightX + boxW / 2, fileY + 20);
+      }
+    }
+
+    // --- Tip 2 ---
+    function drawTip2(step) {
+      const res = initCanvas(`c-2-${step}`);
+      if (!res) return;
+      const { ctx, width, height } = res;
+
+      const cy = height * 0.48;
+      const c1X = width * 0.22;
+      const c2X = width * 0.74;
+
+      const r1 = 36;
+      const r2 = 48;
+
+      drawNode(ctx, c1X, cy, "HEAD~1", "#64748b", r1);
+      drawArrow(ctx, c1X + r1, cy, c2X - r2, cy, "#94a3b8");
+
+      if (step === 1) {
+        ctx.beginPath();
+        ctx.arc(c2X, cy, r2, 0, Math.PI * 2);
+        ctx.fillStyle = "#fff1f2";
+        ctx.fill();
+        ctx.strokeStyle = "#e11d48";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        const chipW = 74;
+        const chipH = 24;
+
+        roundRect(ctx, c2X - chipW / 2, cy - 28, chipW, chipH, 4, "#d1fae5", "#059669");
+        ctx.fillStyle = "#065f46";
+        ctx.font = "bold 12px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("file-a", c2X, cy - 16);
+
+        roundRect(ctx, c2X - chipW / 2, cy + 4, chipW, chipH, 4, "#ffe4e6", "#e11d48");
+        ctx.fillStyle = "#9f1239";
+        ctx.fillText("file-b ✕", c2X, cy + 16);
+      } else if (step === 2) {
+        ctx.beginPath();
+        ctx.arc(c2X, cy, r2, 0, Math.PI * 2);
+        ctx.fillStyle = "#f0f9ff";
+        ctx.fill();
+        ctx.strokeStyle = "#0284c7";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.fillStyle = "#0369a1";
+        ctx.font = "bold 15px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("除外指示", c2X, cy);
+
+        drawArrow(ctx, c2X, cy + r2, c2X, height - 12, "#d97706", "ステージへ戻す");
+      } else if (step === 3) {
+        ctx.beginPath();
+        ctx.arc(c2X, cy, r2, 0, Math.PI * 2);
+        ctx.fillStyle = "#ecfdf5";
+        ctx.fill();
+        ctx.strokeStyle = "#059669";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        const chipW = 78;
+        const chipH = 26;
+        roundRect(ctx, c2X - chipW / 2, cy - 13, chipW, chipH, 4, "#d1fae5", "#059669");
+        ctx.fillStyle = "#065f46";
+        ctx.font = "bold 12px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("file-a のみ", c2X, cy);
+
+        ctx.fillStyle = "#0284c7";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("file-b は作業ツリーに残る", c2X, height - 12);
+      }
+    }
+
+    // --- Tip 3 ---
+    function drawTip3(step) {
+      const res = initCanvas(`c-3-${step}`);
+      if (!res) return;
+      const { ctx, width, height } = res;
+
+      const startX = width * 0.16;
+      const cy = height * 0.5;
+      const r = 32;
+
+      if (step === 1) {
+        drawNode(ctx, startX, cy, "C0", "#64748b", r);
+
+        drawArrow(ctx, startX + r, cy - 12, width * 0.6 - r, cy - 35, "#7c3aed");
+        drawNode(ctx, width * 0.6, cy - 40, "R1", "#7c3aed", r);
+        ctx.fillStyle = "#7c3aed";
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText("リモート (@{u})", width * 0.6 + r + 10, cy - 40);
+
+        drawArrow(ctx, startX + r, cy + 12, width * 0.6 - r, cy + 35, "#059669");
+        drawNode(ctx, width * 0.6, cy + 40, "L1", "#059669", r);
+        ctx.fillStyle = "#059669";
+        ctx.fillText("ローカル", width * 0.6 + r + 10, cy + 40);
+      } else if (step === 2) {
+        drawNode(ctx, startX, cy, "C0", "#64748b", r);
+        drawArrow(ctx, startX + r, cy, width * 0.48 - r, cy, "#7c3aed");
+        drawNode(ctx, width * 0.48, cy, "R1", "#7c3aed", r);
+
+        drawArrow(ctx, width * 0.48 + r, cy, width * 0.82 - r, cy, "#0284c7", "付け替え");
+        drawNode(ctx, width * 0.82, cy, "L1'", "#64748b", r);
+      } else if (step === 3) {
+        drawNode(ctx, startX, cy, "C0", "#64748b", r);
+        drawArrow(ctx, startX + r, cy, width * 0.48 - r, cy, "#7c3aed");
+        drawNode(ctx, width * 0.48, cy, "R1", "#7c3aed", r);
+        drawArrow(ctx, width * 0.48 + r, cy, width * 0.82 - r, cy, "#059669");
+        drawNode(ctx, width * 0.82, cy, "L1", "#059669", r);
+
+        ctx.fillStyle = "#059669";
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("✓ 一直線になり Push 成功", width * 0.5, height - 12);
+      }
+    }
+
+    // --- Tip 4 ---
+    function drawTip4(step) {
+      const res = initCanvas(`c-4-${step}`);
+      if (!res) return;
+      const { ctx, width, height } = res;
+
+      const commits = [
+        { name: "C1", hit: true },
+        { name: "C2", hit: false },
+        { name: "C3", hit: true },
+        { name: "C4", hit: false }
+      ];
+
+      const cy = height * 0.45;
+      const stepX = width / (commits.length + 1);
+      const r = 22;
+
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(stepX * 0.8, cy);
+      ctx.lineTo(stepX * commits.length + 15, cy);
+      ctx.stroke();
+
+      commits.forEach((c, idx) => {
+        const cx = stepX * (idx + 1);
+        let color = "#94a3b8";
+        let isHit = false;
+
+        if (step === 1) {
+          color = "#0284c7";
+        } else {
+          if (c.hit) {
+            color = "#059669";
+            isHit = true;
+          } else {
+            color = "#cbd5e1";
+          }
+        }
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = isHit ? "#ecfdf5" : "#ffffff";
+        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = isHit ? 3 : 2;
+        ctx.stroke();
+
+        ctx.fillStyle = color === "#cbd5e1" ? "#94a3b8" : color;
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(c.name, cx, cy);
+
+        if (step >= 2 && c.hit) {
+          ctx.fillStyle = "#059669";
+          ctx.font = "bold 13px sans-serif";
+          ctx.fillText("対象", cx, cy + 32);
+        }
+      });
+
+      if (step === 3) {
+        ctx.fillStyle = "#0284c7";
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("C1, C3 の差分（diff）を表示", width / 2, height - 12);
+      }
+    }
+
+    // --- Tip 5 ---
+    function drawTip5(step) {
+      const res = initCanvas(`c-5-${step}`);
+      if (!res) return;
+      const { ctx, width, height } = res;
+
+      const cardW = width * 0.44;
+      const cardH = height * 0.72;
+      const cardY = (height - cardH) / 2;
+      const c1X = width * 0.04;
+      const c2X = width * 0.52;
+
+      roundRect(ctx, c1X, cardY, cardW, cardH, 6, "#f8fafc", "#94a3b8");
+      ctx.fillStyle = "#334155";
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("main ブランチ", c1X + cardW / 2, cardY + 20);
+
+      roundRect(ctx, c2X, cardY, cardW, cardH, 6, "#f0f9ff", "#0284c7");
+      ctx.fillStyle = "#0369a1";
+      ctx.fillText("現在ブランチ", c2X + cardW / 2, cardY + 20);
+
+      const lineY = cardY + 38;
+      for (let i = 0; i < 3; i++) {
+        const ly = lineY + i * 22;
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillRect(c1X + 12, ly, cardW - 24, 8);
+
+        if (step === 1) {
+          ctx.fillRect(c2X + 12, ly, cardW - 24, 8);
+        } else {
+          if (i === 1) {
+            ctx.fillStyle = "#fecdd3";
+            ctx.fillRect(c1X + 12, ly, cardW - 24, 8);
+            ctx.fillStyle = "#a7f3d0";
+            ctx.fillRect(c2X + 12, ly, cardW - 24, 8);
+          } else {
+            ctx.fillStyle = "#e2e8f0";
+            ctx.fillRect(c2X + 12, ly, cardW - 24, 8);
+          }
+        }
+      }
+
+      if (step === 3) {
+        ctx.fillStyle = "#059669";
+        ctx.font = "bold 13px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("+ 追加行", c2X + cardW / 2, height - 12);
+        ctx.fillStyle = "#e11d48";
+        ctx.fillText("- 削除行", c1X + cardW / 2, height - 12);
+      }
+    }
+
+    // --- Tip 6 ---
+    function drawTip6(step) {
+      const res = initCanvas(`c-6-${step}`);
+      if (!res) return;
+      const { ctx, width, height } = res;
+
+      const cy = height * 0.48;
+      const uX = width * 0.18;
+      const r = 34;
+
+      drawNode(ctx, uX, cy, "@{u}", "#7c3aed", r);
+      ctx.fillStyle = "#7c3aed";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Push 済み", uX, cy - 44);
+
+      if (step === 1) {
+        const w1X = width * 0.48;
+        const w2X = width * 0.78;
+        const wr = 28;
+
+        drawArrow(ctx, uX + r, cy, w1X - wr, cy, "#94a3b8");
+        drawNode(ctx, w1X, cy, "WIP1", "#d97706", wr);
+
+        drawArrow(ctx, w1X + wr, cy, w2X - wr, cy, "#94a3b8");
+        drawNode(ctx, w2X, cy, "WIP2", "#d97706", wr);
+
+        ctx.fillStyle = "#d97706";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText("未送信の複数コミット", width * 0.63, cy + 42);
+      } else if (step === 2) {
+        const boxX = width * 0.36;
+        const boxW = width * 0.58;
+        roundRect(ctx, boxX, cy - 32, boxW, 64, 8, "#fffbeb", "#d97706");
+
+        drawArrow(ctx, boxX + boxW - 8, cy, uX + r + 4, cy, "#0284c7", "reset @{u}");
+
+        ctx.fillStyle = "#b45309";
+        ctx.font = "bold 14px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("件数数えず一括集約", boxX + boxW / 2, cy - 8);
+        ctx.fillStyle = "#64748b";
+        ctx.font = "bold 12px sans-serif";
+        ctx.fillText("ステージング領域へ戻る", boxX + boxW / 2, cy + 14);
+      } else if (step === 3) {
+        const cX = width * 0.65;
+        const fr = 36;
+        drawArrow(ctx, uX + r, cy, cX - fr, cy, "#059669");
+        drawNode(ctx, cX, cy, "feat", "#059669", fr);
+
+        ctx.fillStyle = "#0284c7";
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("✓ 1 つに統合完了！", cX, height - 12);
+      }
+    }
+
+    // --- Tip 7 ---
+    function drawTip7(step) {
+      const res = initCanvas(`c-7-${step}`);
+      if (!res) return;
+      const { ctx, width, height } = res;
+
+      const cy = height * 0.44;
+      const cx = width / 2;
+      const r = 38;
+
+      if (step === 1) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.strokeStyle = "#e11d48";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.fillStyle = "#be123c";
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("直前コミット", cx, cy);
+
+        const msgW = 210;
+        const msgH = 30;
+        roundRect(ctx, cx - msgW / 2, cy + 46, msgW, msgH, 4, "#fff1f2", "#e11d48");
+        ctx.fillStyle = "#9f1239";
+        ctx.font = "bold 13px monospace";
+        ctx.fillText('"fix: 認書追加" (タイポ)', cx, cy + 61);
+      } else if (step === 2) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.strokeStyle = "#0284c7";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.fillStyle = "#0369a1";
+        ctx.font = "bold 14px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("--amend", cx, cy);
+
+        drawArrow(ctx, cx, cy + r, cx, cy + 58, "#0284c7", "書き換え");
+      } else if (step === 3) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.strokeStyle = "#059669";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.fillStyle = "#047857";
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("直前コミット", cx, cy);
+
+        const msgW = 210;
+        const msgH = 30;
+        roundRect(ctx, cx - msgW / 2, cy + 46, msgW, msgH, 4, "#ecfdf5", "#059669");
+        ctx.fillStyle = "#065f46";
+        ctx.font = "bold 13px monospace";
+        ctx.fillText('"fix: 認証追加" ✓', cx, cy + 61);
+      }
+    }
+
+    function renderAll() {
+      for (let tip = 1; tip <= 7; tip++) {
+        for (let step = 1; step <= 3; step++) {
+          if (tip === 1) drawTip1(step);
+          if (tip === 2) drawTip2(step);
+          if (tip === 3) drawTip3(step);
+          if (tip === 4) drawTip4(step);
+          if (tip === 5) drawTip5(step);
+          if (tip === 6) drawTip6(step);
+          if (tip === 7) drawTip7(step);
+        }
+      }
+    }
+
+    function copyCode(btn) {
+      const code = btn.nextElementSibling.innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = "コピー完了!";
+        btn.style.color = "#059669";
+        btn.style.borderColor = "#059669";
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.color = "";
+          btn.style.borderColor = "";
+        }, 1800);
+      });
+    }
+
+    window.addEventListener('load', renderAll);
+    window.addEventListener('resize', renderAll);
+  </script>
+</body>
+</html>

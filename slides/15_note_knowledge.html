@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>読み物：フロント技術の知識があるほど、表現力を高められる</title>
+  <link rel="stylesheet" href="../theme/slide_theme.css">
+  <script src="../theme/slide_theme.js" defer></script>
+  <script src="../theme/canvas_theme.js"></script>
+  <style>
+    .slide-content {
+      padding: 0 !important;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .slide-header h1 {
+      font-size: 2.5rem;
+      white-space: nowrap;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <h1>読み物：フロント技術の知識があるほど、表現力を高められる</h1>
+      <div class="slide-logo"></div>
+    </header>
+
+    <main class="slide-content">
+      <canvas id="slide-canvas"></canvas>
+    </main>
+
+    <footer class="slide-footer"></footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('slide-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 共通レイアウト規格（theme/canvas_theme.js）から展開
+    const { SLIDE_WIDTH, SLIDE_HEIGHT, HEADER_HEIGHT, FOOTER_HEIGHT, CONTENT_WIDTH, CONTENT_HEIGHT } = window.CANVAS_LAYOUT;
+
+    function drawCard(ctx, x, y, w, h, bg = '#ffffff', border = '#cbd5e1', radius = 18) {
+      ctx.save();
+      ctx.fillStyle = bg;
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, radius);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawText(ctx, text, x, y, font, color, align = 'left') {
+      ctx.save();
+      ctx.font = font;
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    function drawWrapText(ctx, text, x, startY, maxWidth, lineHeight, font, color) {
+      ctx.save();
+      ctx.font = font;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+
+      const lines = [];
+      let currentLine = '';
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const testLine = currentLine + char;
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && i > 0) {
+          lines.push(currentLine);
+          currentLine = char;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+
+      lines.forEach((line, index) => {
+        ctx.fillText(line, x, startY + index * lineHeight);
+      });
+      ctx.restore();
+    }
+
+    function drawContent(ctx, baseWidth, baseHeight) {
+      // 背景
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, baseWidth, baseHeight);
+
+      const colW = 560;
+      const colH = 690;
+      const topY = 30;
+      const startX = 70;
+      const gap = (baseWidth - 140 - (colW * 3)) / 2;
+
+      // ==========================================
+      // カラム1: 1. 配布先に応じた環境と制約
+      // ==========================================
+      const col1X = startX;
+      drawCard(ctx, col1X, topY, colW, colH, '#ffffff', '#cbd5e1');
+      drawText(ctx, '1. 配布先に応じた環境と制約', col1X + 35, topY + 46, 'bold 36px sans-serif', '#0f172a');
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(col1X + 35, topY + 84, colW - 70, 2);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(col1X + 35, topY + 84, 120, 2);
+
+      const levels = [
+        {
+          lv: 'Lv.1 JS不使用のHTML',
+          desc: 'CSS装飾のみ。TeamsやSharePoint上でもそのまま安全に開ける最も手軽な形式。'
+        },
+        {
+          lv: 'Lv.2 外部データを扱わないHTML',
+          desc: 'サーバー不要。ダブルクリックだけで動き、手軽にインタラクティブな操作を実現。'
+        },
+        {
+          lv: 'Lv.3 外部データを扱うHTML',
+          desc: 'CORS回避のためローカルサーバー必須（python -m http.server 等）。データ（JSON等）と表示を完全に分離可能。'
+        }
+      ];
+
+      levels.forEach((l, idx) => {
+        const itemY = topY + 120 + idx * 178;
+        drawText(ctx, l.lv, col1X + 35, itemY, 'bold 30px sans-serif', '#d97706');
+        drawWrapText(ctx, l.desc, col1X + 35, itemY + 34, colW - 70, 36, '24px sans-serif', '#475569');
+      });
+
+      // ==========================================
+      // カラム2: 2. 表現が広がるWeb技術
+      // ==========================================
+      const col2X = startX + colW + gap;
+      drawCard(ctx, col2X, topY, colW, colH, '#ffffff', '#cbd5e1');
+      drawText(ctx, '2. 表現が広がるWeb技術', col2X + 35, topY + 46, 'bold 36px sans-serif', '#0f172a');
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(col2X + 35, topY + 84, colW - 70, 2);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(col2X + 35, topY + 84, 120, 2);
+
+      const techs = [
+        {
+          t: 'Canvas API',
+          d: 'タグではなくプログラム描画。動く構成図やカスタムグラフを自由に表現。'
+        },
+        {
+          t: 'SPA（Single Page App）',
+          d: '画面遷移なしで瞬時に表示切替。Webアプリのようなスムーズな操作感。'
+        },
+        {
+          t: 'Data URI スキーム',
+          d: '画像やアイコンをBase64でHTML内に直埋め込みし、1ファイル完結で配布可能にする。'
+        },
+        {
+          t: 'Web Storage API',
+          d: '外部DB不要でブラウザ内に自分専用の設定やメモ・進捗状態を保存。'
+        }
+      ];
+
+      techs.forEach((t, idx) => {
+        const itemY = topY + 116 + idx * 136;
+        drawText(ctx, t.t, col2X + 35, itemY, 'bold 28px sans-serif', '#0284c7');
+        drawWrapText(ctx, t.d, col2X + 35, itemY + 32, colW - 70, 34, '23px sans-serif', '#475569');
+      });
+
+      // ==========================================
+      // カラム3: 3. 本格運用・保守を支える技術
+      // ==========================================
+      const col3X = startX + (colW + gap) * 2;
+      drawCard(ctx, col3X, topY, colW, colH, '#ffffff', '#cbd5e1');
+      drawText(ctx, '3. 本格運用・保守を支える技術', col3X + 35, topY + 46, 'bold 36px sans-serif', '#0f172a');
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(col3X + 35, topY + 84, colW - 70, 2);
+      ctx.fillStyle = '#7c3aed';
+      ctx.fillRect(col3X + 35, topY + 84, 120, 2);
+
+      const advancedTechs = [
+        {
+          c: 'モダン開発基盤（Vite ＋ TypeScript）',
+          d: '型安全性でデータやロジックの破綻を防ぎ、待ち時間ゼロの即時反映でAIとの試行錯誤を高速化。'
+        },
+        {
+          c: 'CSSフレームワーク（Tailwind CSS）',
+          d: 'CSSファイルを別で作らず、HTML内に直接指定して整ったUIを一発生成。'
+        },
+        {
+          c: 'レスポンシブ対応',
+          d: 'メディアクエリや比率維持スケーリングで、多様なモニターサイズに柔軟適応。'
+        }
+      ];
+
+      advancedTechs.forEach((c, idx) => {
+        const itemY = topY + 120 + idx * 178;
+        drawText(ctx, c.c, col3X + 35, itemY, 'bold 28px sans-serif', '#7c3aed');
+        drawWrapText(ctx, c.d, col3X + 35, itemY + 34, colW - 70, 36, '24px sans-serif', '#475569');
+      });
+
+      // ==========================================
+      // 下部まとめカード
+      // ==========================================
+      const bottomY = 745;
+      const bottomH = 115;
+      drawCard(ctx, 70, bottomY, baseWidth - 140, bottomH, '#f8fafc', '#cbd5e1', 18);
+
+      drawText(
+        ctx,
+        '💡 「何ができるのか」を知っているだけで、AIへの指示の解像度が劇的に上がる',
+        baseWidth / 2,
+        bottomY + bottomH / 2,
+        'bold 34px sans-serif',
+        '#0f172a',
+        'center'
+      );
+    }
+
+    function render() {
+      const container = canvas.parentElement;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (!width || !height) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+
+      ctx.scale(dpr, dpr);
+
+      // メインエリア基準サイズ（1920 × 900）に対するスケーリング比率
+      const scaleX = width / CONTENT_WIDTH;
+      const scaleY = height / CONTENT_HEIGHT;
+      const scale = Math.min(scaleX, scaleY);
+
+      const offsetX = (width - CONTENT_WIDTH * scale) / 2;
+      const offsetY = (height - CONTENT_HEIGHT * scale) / 2;
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+
+      drawContent(ctx, CONTENT_WIDTH, CONTENT_HEIGHT);
+
+      ctx.restore();
+    }
+
+    window.addEventListener('resize', render);
+    window.addEventListener('load', render);
+    // スライド切り替え等のタイミングでも再描画
+    setTimeout(render, 50);
+  </script>
+</body>
+
+</html>

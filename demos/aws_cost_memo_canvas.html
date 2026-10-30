@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PULSE ARCHITECT — AWS コスト自動化 立体設計図</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #f8fafc;
+      --bg-panel: rgba(255, 255, 255, 0.88);
+      --bg-card: #ffffff;
+      --border-subtle: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-main: #0f172a;
+      --text-sub: #475569;
+      --text-dim: #94a3b8;
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --primary-border: #bae6fd;
+      --accent: #2563eb;
+      --success: #059669;
+      --success-light: #ecfdf5;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-body: 'Noto Sans JP', sans-serif;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 1px 1px, #cbd5e1 1px, transparent 0);
+      background-size: 28px 28px;
+    }
+
+    /* 上部ヘッダー（CAD/HUDスタイル） */
+    header.blueprint-header {
+      padding: 14px 28px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.05em;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--text-sub);
+      font-weight: 500;
+    }
+
+    .hud-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 0.7; }
+    }
+
+    .btn-action {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+    }
+
+    .btn-action:hover {
+      background: #0274b0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.45);
+    }
+
+    .btn-action:active {
+      transform: translateY(0);
+    }
+
+    /* メインレイアウト */
+    main.workspace {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      padding: 24px 28px;
+      flex: 1;
+      max-width: 1720px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* 左側：3Dアイソメトリック回路キャンバス & ビューポート */
+    .viewport-container {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .blueprint-stage {
+      position: relative;
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      aspect-ratio: 16 / 10;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage-overlay-header {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .stage-badge-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .layer-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+      width: fit-content;
+      border: 1px solid var(--primary-border);
+    }
+
+    .stage-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .stage-legend {
+      display: flex;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      pointer-events: auto;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-sub);
+    }
+
+    .legend-color {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    canvas#circuitCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    canvas#circuitCanvas:active {
+      cursor: grabbing;
+    }
+
+    .stage-controls {
+      position: absolute;
+      bottom: 18px;
+      left: 20px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .view-chip {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .view-chip.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* 下部：メトリクス＆プロセス対比 */
+    .telemetry-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .telemetry-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-label {
+      font-size: 12px;
+      color: var(--text-sub);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-val {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .card-val span {
+      font-size: 13px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      color: var(--text-sub);
+    }
+
+    .card-progress {
+      height: 6px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    /* 右側：コントロール・検討事項・インスペクタパネル */
+    .inspector-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel-box h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #f1f5f9;
+      color: var(--text-sub);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    /* 検討事項リワイアリングセレクタ */
+    .decision-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .decision-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .wire-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .wire-btn {
+      background: #f8fafc;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .wire-btn:hover {
+      background: #f1f5f9;
+      border-color: var(--border-strong);
+    }
+
+    .wire-btn.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .wire-btn-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .wire-btn-desc {
+      font-size: 10px;
+      color: var(--text-sub);
+      line-height: 1.3;
+    }
+
+    /* ノード詳細インスペクタ */
+    .node-detail-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .detail-node-name {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .detail-node-type {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed var(--border-subtle);
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .detail-prop {
+      color: var(--text-sub);
+    }
+
+    .detail-val {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* フッターログ */
+    .log-terminal {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #0f172a;
+      color: #94a3b8;
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      height: 110px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 8px;
+    }
+
+    .log-time {
+      color: #64748b;
+    }
+
+    .log-msg.highlight {
+      color: #38bdf8;
+    }
+
+    .log-msg.success {
+      color: #4ade80;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CAD HUD ヘッダー -->
+  <header class="blueprint-header">
+    <div class="brand-section">
+      <span class="brand-badge">CAD-SYS v2.4</span>
+      <div>
+        <h1 class="brand-title">PULSE ARCHITECT</h1>
+        <p class="brand-subtitle">AWS コスト自動集計アーキテクチャ 立体回路設計図</p>
+      </div>
+    </div>
+
+    <div class="hud-controls">
+      <a href="./aws_cost_memo.html" style="font-size:12px; color:var(--text-sub); text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--bg-card); font-weight:600;">
+        元の検討資料 ↗
+      </a>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="systemStatusText">CIRCUIT: READY</span>
+      </div>
+      <button class="btn-action" id="triggerPulseBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        08:00 パルスシグナル発射
+      </button>
+    </div>
+  </header>
+
+  <!-- ワークスペース -->
+  <main class="workspace">
+    <!-- 左：立体回路設計図ビューポート -->
+    <div class="viewport-container">
+      <div class="blueprint-stage" id="stageContainer">
+        <div class="stage-overlay-header">
+          <div class="stage-badge-group">
+            <span class="layer-tag">ISOMETRIC MULTI-LAYER VIEW</span>
+            <div class="stage-title">インタラクティブ実行フロー回路</div>
+          </div>
+          <div class="stage-legend">
+            <div class="legend-item"><span class="legend-color" style="background:#0284c7;"></span>トリガー層</div>
+            <div class="legend-item"><span class="legend-color" style="background:#2563eb;"></span>演算 (Lambda)</div>
+            <div class="legend-item"><span class="legend-color" style="background:#059669;"></span>データ層</div>
+            <div class="legend-item"><span class="legend-color" style="background:#d97706;"></span>閲覧層</div>
+          </div>
+        </div>
+
+        <!-- 3D立体回路を描画するメインCanvas -->
+        <canvas id="circuitCanvas"></canvas>
+
+        <div class="stage-controls">
+          <button class="view-chip active" data-view="isometric">立体俯瞰 (3D)</button>
+          <button class="view-chip" data-view="topdown">平面回路 (2D)</button>
+          <button class="view-chip" id="resetCamBtn">視点リセット</button>
+        </div>
+      </div>
+
+      <!-- プロセス対比＆テレメトリ -->
+      <div class="telemetry-row">
+        <div class="telemetry-card">
+          <div class="card-label">
+            <span>集計サイクル所要時間</span>
+            <span style="color:var(--success); font-weight:700;">-98.8%</span>
+          </div>
+          <div class="card-val" id="timeVal">10.2 <span>秒 / 日 (従来15分)</span></div>
+          <div class="card-progress">
+            <div class="progress-fill" style="width: 98%;"></div>
+          </div>
+        </div>
+
+        <div class="telemetry-card">
+          <div class="card-label">
+            <span>月額ランニングコスト試算</span>
+            <span style="color:var(--primary); font-weight:700;">FREE TIER</span>
+          </div>
+          <div class="card-val" id="costVal">$0.02 <span>/ 月 (ほぼ無料)</span></div>
+          <div class="card-progress">
+            <div class="progress-fill" style="width: 15%; background: var(--success);"></div>
+          </div>
+        </div>
+
+        <div class="telemetry-card">
+          <div class="card-label">
+            <span>パルス通信状態</span>
+            <span id="activePacketsText" style="font-family:var(--font-mono);">0 PACKETS</span>
+          </div>
+          <div class="card-val" id="stageStepText">IDLE <span>待機中</span></div>
+          <div class="card-progress">
+            <div class="progress-fill" id="flowProgress" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：インスペクタ＆検討事項配線切り替え -->
+    <div class="inspector-panel">
+      <!-- 協議事項：配線の動的リワイアリング -->
+      <div class="panel-box">
+        <h3>
+          <span>協議事項（動的リワイアリング）</span>
+          <span class="badge-count">2 DECISIONS</span>
+        </h3>
+
+        <!-- 協議01: 閲覧先アーキテクチャの切り替え -->
+        <div class="decision-group">
+          <div class="decision-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            論点01: ダッシュボード配信先
+          </div>
+          <div class="wire-options">
+            <button class="wire-btn active" id="btnWireS3" data-target="s3">
+              <span class="wire-btn-name">S3 + CloudFront</span>
+              <span class="wire-btn-desc">静的配信。最速・低コストだがIP制限等の設計が必要</span>
+            </button>
+            <button class="wire-btn" id="btnWirePortal" data-target="portal">
+              <span class="wire-btn-name">社内既存ポータル</span>
+              <span class="wire-btn-desc">JSON API連携。既存認証を活かせるが繋ぎこみ工数増</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 協議02: コスト取得間隔 -->
+        <div class="decision-group">
+          <div class="decision-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            論点02: 取得トリガー頻度
+          </div>
+          <div class="wire-options">
+            <button class="wire-btn active" id="btnFreqDaily" data-freq="daily">
+              <span class="wire-btn-name">毎朝 08:00 (1回)</span>
+              <span class="wire-btn-desc">前日分確定値のみ。無駄なAPI呼び出しゼロ</span>
+            </button>
+            <button class="wire-btn" id="btnFreq4h" data-freq="4h">
+              <span class="wire-btn-name">4時間毎 (6回)</span>
+              <span class="wire-btn-desc">日中速報反映。CE API課金枠に留意</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 選択ノードのプロパティ -->
+      <div class="panel-box">
+        <h3>
+          <span>選択コンポーネント詳細</span>
+          <span class="badge-count" id="inspectedLayer">LAYER 02</span>
+        </h3>
+
+        <div class="node-detail-card" id="inspectorCard">
+          <div class="detail-header">
+            <div class="detail-node-name" id="nodeName">AWS Lambda (集計コア)</div>
+            <span class="detail-node-type" id="nodeType">Compute Engine</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-prop">ランタイム:</span>
+            <span class="detail-val" id="nodeRuntime">Python 3.12 / 128MB</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-prop">想定実行時間:</span>
+            <span class="detail-val" id="nodeExecTime">約 3.4 秒</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-prop">利用API:</span>
+            <span class="detail-val" id="nodeApi">GetCostAndUsage (CE)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-prop">出力フォーマット:</span>
+            <span class="detail-val" id="nodeOutput">daily_metrics.json</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- リアルタイムシステムログ -->
+      <div class="panel-box">
+        <h3>
+          <span>アーキテクチャ実行テレメトリ</span>
+          <span style="font-size:11px; font-weight:normal; color:var(--text-sub);">LIVE LOG</span>
+        </h3>
+        <div class="log-terminal" id="logTerminal">
+          <div class="log-line"><span class="log-time">[00:00:00]</span><span class="log-msg">Architecture blueprint initialized.</span></div>
+          <div class="log-line"><span class="log-time">[00:00:00]</span><span class="log-msg">Topology: 4 Layers, 5 Primary Micro-Nodes.</span></div>
+          <div class="log-line"><span class="log-time">[00:00:00]</span><span class="log-msg highlight">Ready for signal dispatch. Click button above.</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // --- 状態管理 ---
+    const state = {
+      viewMode: 'isometric', // 'isometric' | 'topdown'
+      wireTarget: 's3',      // 's3' | 'portal'
+      triggerFreq: 'daily',  // 'daily' | '4h'
+      selectedNodeId: 'lambda',
+      isPulseRunning: false,
+      pulseProgress: 0,
+      camera: {
+        rotX: 25 * Math.PI / 180,
+        rotY: -20 * Math.PI / 180,
+        targetRotX: 25 * Math.PI / 180,
+        targetRotY: -20 * Math.PI / 180,
+        zoom: 1,
+        panX: 0,
+        panY: 0
+      },
+      mouse: {
+        isDown: false,
+        startX: 0,
+        startY: 0
+      },
+      packets: [] // 飛び交うパルス光粒子
+    };
+
+    // --- ノード定義（立体座標系） ---
+    const nodes = [
+      {
+        id: 'cron',
+        name: 'EventBridge (cron: 08:00)',
+        layer: 'TRIGGER LAYER',
+        layerNum: 'LAYER 01',
+        type: 'Scheduler',
+        x: -260, y: -40, z: -80,
+        color: '#0284c7',
+        runtime: 'Managed Cron Rule',
+        execTime: '< 10 ms',
+        api: 'Invoke Lambda Event',
+        output: 'Scheduled Event Payload'
+      },
+      {
+        id: 'lambda',
+        name: 'AWS Lambda (コスト集計)',
+        layer: 'COMPUTE CORE',
+        layerNum: 'LAYER 02',
+        type: 'Serverless Compute',
+        x: -80, y: 10, z: 0,
+        color: '#2563eb',
+        runtime: 'Python 3.12 / 128MB',
+        execTime: '約 3.4 秒',
+        api: 'ce:GetCostAndUsage',
+        output: 'daily_metrics.json'
+      },
+      {
+        id: 'ce',
+        name: 'Cost Explorer API',
+        layer: 'AWS SYSTEM API',
+        layerNum: 'LAYER 02-B',
+        type: 'Financial API',
+        x: -80, y: -110, z: 40,
+        color: '#7c3aed',
+        runtime: 'AWS Managed Endpoint',
+        execTime: '約 1.8 秒',
+        api: 'Daily Granularity Query',
+        output: 'Raw Cost & Usage JSON'
+      },
+      {
+        id: 's3',
+        name: 'Amazon S3 (ダッシュボード)',
+        layer: 'DATA & STORAGE',
+        layerNum: 'LAYER 03',
+        type: 'Static Hosting',
+        x: 120, y: -30, z: -40,
+        color: '#059669',
+        runtime: 'S3 Standard Bucket',
+        execTime: '< 50 ms',
+        api: 's3:PutObject',
+        output: 'HTML / JS Static Assets'
+      },
+      {
+        id: 'portal',
+        name: '社内管理ポータル (API受取)',
+        layer: 'INTERNAL PORTAL',
+        layerNum: 'LAYER 03-ALT',
+        type: 'Corporate App',
+        x: 120, y: 70, z: -40,
+        color: '#d97706',
+        runtime: 'Existing Microservice',
+        execTime: '~ 120 ms',
+        api: 'REST POST /metrics',
+        output: 'Internal DB Store'
+      },
+      {
+        id: 'client',
+        name: '開発チーム閲覧端末',
+        layer: 'PRESENTATION LAYER',
+        layerNum: 'LAYER 04',
+        type: 'Client Browser',
+        x: 280, y: 20, z: 0,
+        color: '#0f172a',
+        runtime: 'Chrome / Edge / Safari',
+        execTime: 'Instant Load',
+        api: 'HTTPS GET (CloudFront)',
+        output: 'Interactive UI View'
+      }
+    ];
+
+    // --- ワイヤ（回路配線）の定義 ---
+    function getActiveWires() {
+      const wires = [
+        { from: 'cron', to: 'lambda', label: '定時トリガー' },
+        { from: 'lambda', to: 'ce', label: 'コスト取得要求', bidirectional: true },
+      ];
+
+      if (state.wireTarget === 's3') {
+        wires.push({ from: 'lambda', to: 's3', label: '集計JSON配置' });
+        wires.push({ from: 's3', to: 'client', label: 'ダッシュボード閲覧' });
+      } else {
+        wires.push({ from: 'lambda', to: 'portal', label: 'API経由連携' });
+        wires.push({ from: 'portal', to: 'client', label: '社内ポータル表示' });
+      }
+
+      return wires;
+    }
+
+    // --- Canvas初期化 & レンダリング ---
+    const canvas = document.getElementById('circuitCanvas');
+    const ctx = canvas.getContext('2d');
+    const stageContainer = document.getElementById('stageContainer');
+
+    function resizeCanvas() {
+      const rect = stageContainer.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // 3Dから2D画面座標への射影関数（アイソメトリック＆パース）
+    function project(x, y, z) {
+      const rect = stageContainer.getBoundingClientRect();
+      const cx = rect.width / 2 + state.camera.panX;
+      const cy = rect.height / 2 + state.camera.panY;
+
+      if (state.viewMode === 'topdown') {
+        return {
+          px: cx + x * 1.2 * state.camera.zoom,
+          py: cy + (y + z * 0.4) * 1.2 * state.camera.zoom,
+          scale: 1,
+          depth: z
+        };
+      }
+
+      // 3D回転
+      const cosY = Math.cos(state.camera.rotY);
+      const sinY = Math.sin(state.camera.rotY);
+      const cosX = Math.cos(state.camera.rotX);
+      const sinX = Math.sin(state.camera.rotX);
+
+      // Y軸回転
+      let x1 = x * cosY + z * sinY;
+      let y1 = y;
+      let z1 = -x * sinY + z * cosY;
+
+      // X軸回転
+      let y2 = y1 * cosX - z1 * sinX;
+      let z2 = y1 * sinX + z1 * cosX;
+
+      // 投影
+      const fov = 750;
+      const scale = (fov / (fov + z2 * 0.7)) * state.camera.zoom;
+
+      return {
+        px: cx + x1 * scale,
+        py: cy + y2 * scale,
+        scale: scale,
+        depth: z2
+      };
+    }
+
+    // メイン描画ループ
+    function draw() {
+      const rect = stageContainer.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      // カメラの慣性補間
+      state.camera.rotX += (state.camera.targetRotX - state.camera.rotX) * 0.1;
+      state.camera.rotY += (state.camera.targetRotY - state.camera.rotY) * 0.1;
+
+      // 1. 基底グリッド（3Dグリッド平面）の描画
+      drawGrid();
+
+      // 2. 配線（回路ワイヤ）の描画
+      drawWires();
+
+      // 3. パルス粒子（データパケット）の描画 & 更新
+      drawPackets();
+
+      // 4. マイクロノード（立体ICチップ）の描画
+      drawNodes();
+
+      requestAnimationFrame(draw);
+    }
+
+    // グリッド描画
+    function drawGrid() {
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      const gridSize = 360;
+      const step = 60;
+
+      for (let i = -gridSize; i <= gridSize; i += step) {
+        const p1 = project(i, 80, -gridSize);
+        const p2 = project(i, 80, gridSize);
+        ctx.beginPath();
+        ctx.moveTo(p1.px, p1.py);
+        ctx.lineTo(p2.px, p2.py);
+        ctx.stroke();
+
+        const p3 = project(-gridSize, 80, i);
+        const p4 = project(gridSize, 80, i);
+        ctx.beginPath();
+        ctx.moveTo(p3.px, p3.py);
+        ctx.lineTo(p4.px, p4.py);
+        ctx.stroke();
+      }
+    }
+
+    // 回路ワイヤ描画
+    function drawWires() {
+      const activeWires = getActiveWires();
+
+      activeWires.forEach(wire => {
+        const fromNode = nodes.find(n => n.id === wire.from);
+        const toNode = nodes.find(n => n.id === wire.to);
+        if (!fromNode || !toNode) return;
+
+        const p1 = project(fromNode.x, fromNode.y, fromNode.z);
+        const p2 = project(toNode.x, toNode.y, toNode.z);
+
+        // 基板配線風の直角クランク配線
+        const midX = (fromNode.x + toNode.x) / 2;
+        const midZ = (fromNode.z + toNode.z) / 2;
+        const pMid = project(midX, (fromNode.y + toNode.y) / 2, midZ);
+
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(p1.px, p1.py);
+        ctx.quadraticCurveTo(pMid.px, pMid.py, p2.px, p2.py);
+        ctx.stroke();
+
+        // 導線ハイライト
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(p1.px, p1.py);
+        ctx.quadraticCurveTo(pMid.px, pMid.py, p2.px, p2.py);
+        ctx.stroke();
+      });
+    }
+
+    // パルス粒子（パケット）
+    function drawPackets() {
+      for (let i = state.packets.length - 1; i >= 0; i--) {
+        const pkt = state.packets[i];
+        pkt.t += pkt.speed;
+
+        const fromNode = nodes.find(n => n.id === pkt.from);
+        const toNode = nodes.find(n => n.id === pkt.to);
+
+        if (!fromNode || !toNode || pkt.t >= 1) {
+          // 次のステップへ中継
+          if (pkt.nextWires && pkt.nextWires.length > 0) {
+            const next = pkt.nextWires.shift();
+            pkt.from = next.from;
+            pkt.to = next.to;
+            pkt.t = 0;
+            addLog(`Signal arrived at [${pkt.from}]. Relaying to [${pkt.to}]...`);
+          } else {
+            state.packets.splice(i, 1);
+            if (state.packets.length === 0 && state.isPulseRunning) {
+              finishPulseExecution();
+            }
+            continue;
+          }
+        }
+
+        // 補間位置
+        const curX = fromNode.x + (toNode.x - fromNode.x) * pkt.t;
+        const curY = fromNode.y + (toNode.y - fromNode.y) * pkt.t;
+        const curZ = fromNode.z + (toNode.z - fromNode.z) * pkt.t;
+
+        const pos = project(curX, curY, curZ);
+
+        // 光るパルス玉
+        ctx.fillStyle = pkt.color || '#0284c7';
+        ctx.beginPath();
+        ctx.arc(pos.px, pos.py, 4.5 * pos.scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 外側のグロー
+        ctx.strokeStyle = 'rgba(2, 132, 199, 0.4)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(pos.px, pos.py, 8 * pos.scale, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      document.getElementById('activePacketsText').textContent = `${state.packets.length} PACKETS`;
+    }
+
+    // マイクロノード（立体ICチップ）の描画
+    function drawNodes() {
+      // 深度ソートして奥から描画
+      const projectedNodes = nodes.map(n => ({
+        ...n,
+        proj: project(n.x, n.y, n.z)
+      })).sort((a, b) => b.proj.depth - a.proj.depth);
+
+      projectedNodes.forEach(node => {
+        const { px, py, scale } = node.proj;
+        const isSelected = state.selectedNodeId === node.id;
+        const isInactive = (state.wireTarget === 's3' && node.id === 'portal') ||
+                           (state.wireTarget === 'portal' && node.id === 's3');
+
+        ctx.save();
+        ctx.translate(px, py);
+
+        const width = 110 * scale;
+        const height = 48 * scale;
+        const radius = 8 * scale;
+
+        // ドロップシャドウ
+        ctx.shadowColor = isSelected ? 'rgba(2, 132, 199, 0.3)' : 'rgba(15, 23, 42, 0.08)';
+        ctx.shadowBlur = isSelected ? 16 : 8;
+        ctx.shadowOffsetY = 4 * scale;
+
+        // チップ本体
+        ctx.fillStyle = isInactive ? '#f1f5f9' : '#ffffff';
+        ctx.strokeStyle = isSelected ? '#0284c7' : (isInactive ? '#e2e8f0' : '#cbd5e1');
+        ctx.lineWidth = isSelected ? 2.5 : 1.5;
+
+        roundRect(ctx, -width / 2, -height / 2, width, height, radius);
+        ctx.fill();
+        ctx.shadowColor = 'transparent'; // シャドウリセット
+        ctx.stroke();
+
+        // 上部カラーインジケータバー
+        ctx.fillStyle = isInactive ? '#cbd5e1' : node.color;
+        roundRect(ctx, -width / 2 + 3, -height / 2 + 3, width - 6, 4 * scale, 2 * scale);
+        ctx.fill();
+
+        // ノード名テキスト
+        ctx.fillStyle = isInactive ? '#94a3b8' : '#0f172a';
+        ctx.font = `700 ${Math.max(10, 11 * scale)}px 'JetBrains Mono', monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 略称またはID表示
+        const displayName = node.name.split(' ')[0] + ' ' + (node.name.split(' ')[1] || '');
+        ctx.fillText(displayName, 0, 4 * scale);
+
+        // タイプラベル
+        ctx.fillStyle = isInactive ? '#cbd5e1' : '#64748b';
+        ctx.font = `500 ${Math.max(8, 9 * scale)}px 'Noto Sans JP', sans-serif`;
+        ctx.fillText(node.type, 0, 16 * scale);
+
+        ctx.restore();
+      });
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    // --- マウス操作（ドラッグで3D回転・パララックス） ---
+    stageContainer.addEventListener('mousedown', (e) => {
+      state.mouse.isDown = true;
+      state.mouse.startX = e.clientX;
+      state.mouse.startY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', () => {
+      state.mouse.isDown = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (state.mouse.isDown) {
+        const dx = e.clientX - state.mouse.startX;
+        const dy = e.clientY - state.mouse.startY;
+        state.camera.targetRotY += dx * 0.005;
+        state.camera.targetRotX += dy * 0.005;
+        state.mouse.startX = e.clientX;
+        state.mouse.startY = e.clientY;
+      }
+    });
+
+    // クリックによるノード選択インスペクタ連動
+    canvas.addEventListener('click', (e) => {
+      const rect = stageContainer.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      let clickedNode = null;
+      nodes.forEach(node => {
+        const proj = project(node.x, node.y, node.z);
+        const dist = Math.hypot(mouseX - proj.px, mouseY - proj.py);
+        if (dist < 40 * proj.scale) {
+          clickedNode = node;
+        }
+      });
+
+      if (clickedNode) {
+        selectNode(clickedNode.id);
+      }
+    });
+
+    function selectNode(id) {
+      state.selectedNodeId = id;
+      const node = nodes.find(n => n.id === id);
+      if (!node) return;
+
+      document.getElementById('inspectedLayer').textContent = node.layerNum;
+      document.getElementById('nodeName').textContent = node.name;
+      document.getElementById('nodeType').textContent = node.type;
+      document.getElementById('nodeRuntime').textContent = node.runtime;
+      document.getElementById('nodeExecTime').textContent = node.execTime;
+      document.getElementById('nodeApi').textContent = node.api;
+      document.getElementById('nodeOutput').textContent = node.output;
+      addLog(`Inspector focused: [${node.name}]`);
+    }
+
+    // --- パルスシグナル実行フロー ---
+    const triggerBtn = document.getElementById('triggerPulseBtn');
+    const flowProgress = document.getElementById('flowProgress');
+    const stageStepText = document.getElementById('stageStepText');
+    const systemStatusText = document.getElementById('systemStatusText');
+
+    triggerBtn.addEventListener('click', () => {
+      if (state.isPulseRunning) return;
+      startPulseFlow();
+    });
+
+    function startPulseFlow() {
+      state.isPulseRunning = true;
+      systemStatusText.textContent = 'EXECUTING RUNTIME...';
+      stageStepText.innerHTML = 'STAGE 1 <span>定時発火</span>';
+      flowProgress.style.width = '20%';
+
+      addLog(`[EVENT] EventBridge rule triggered at 08:00:00 JST.`);
+      addLog(`Sending pulse packet from [cron] -> [lambda]...`);
+
+      // パケット生成：cron -> lambda -> (ce) -> (s3 or portal) -> client
+      const targetDest = state.wireTarget === 's3' ? 's3' : 'portal';
+
+      state.packets.push({
+        from: 'cron',
+        to: 'lambda',
+        t: 0,
+        speed: 0.025,
+        color: '#0284c7',
+        nextWires: [
+          { from: 'lambda', to: 'ce' },
+          { from: 'ce', to: 'lambda' },
+          { from: 'lambda', to: targetDest },
+          { from: targetDest, to: 'client' }
+        ]
+      });
+
+      // 段階ごとのステータス更新タイマー
+      setTimeout(() => {
+        stageStepText.innerHTML = 'STAGE 2 <span>API集計中</span>';
+        flowProgress.style.width = '50%';
+        addLog(`Lambda queried Cost Explorer API (Filter: Daily).`);
+      }, 1000);
+
+      setTimeout(() => {
+        stageStepText.innerHTML = 'STAGE 3 <span>配置・同期</span>';
+        flowProgress.style.width = '80%';
+        addLog(`Lambda generated summary JSON and dispatched to [${targetDest}].`);
+      }, 2200);
+    }
+
+    function finishPulseExecution() {
+      state.isPulseRunning = false;
+      systemStatusText.textContent = 'CIRCUIT: READY';
+      stageStepText.innerHTML = 'COMPLETED <span>完了 (10.2秒)</span>';
+      flowProgress.style.width = '100%';
+      addLog(`Telemetry received by [Client Browser]. Dashboard refreshed.`, 'success');
+      setTimeout(() => {
+        flowProgress.style.width = '0%';
+        stageStepText.innerHTML = 'IDLE <span>待機中</span>';
+      }, 4000);
+    }
+
+    // --- 協議事項切り替え（動的リワイアリング） ---
+    const btnWireS3 = document.getElementById('btnWireS3');
+    const btnWirePortal = document.getElementById('btnWirePortal');
+
+    btnWireS3.addEventListener('click', () => {
+      state.wireTarget = 's3';
+      btnWireS3.classList.add('active');
+      btnWirePortal.classList.remove('active');
+      document.getElementById('costVal').innerHTML = '$0.02 <span>/ 月 (ほぼ無料)</span>';
+      addLog(`Rewired destination to: Amazon S3 + CloudFront Static Web.`);
+    });
+
+    btnWirePortal.addEventListener('click', () => {
+      state.wireTarget = 'portal';
+      btnWirePortal.classList.add('active');
+      btnWireS3.classList.remove('active');
+      document.getElementById('costVal').innerHTML = '$0.00 <span>/ 追加インフラなし</span>';
+      addLog(`Rewired destination to: Internal Corporate Portal API.`);
+    });
+
+    const btnFreqDaily = document.getElementById('btnFreqDaily');
+    const btnFreq4h = document.getElementById('btnFreq4h');
+
+    btnFreqDaily.addEventListener('click', () => {
+      state.triggerFreq = 'daily';
+      btnFreqDaily.classList.add('active');
+      btnFreq4h.classList.remove('active');
+      document.getElementById('timeVal').innerHTML = '10.2 <span>秒 / 日 (従来15分)</span>';
+      addLog(`Frequency updated: 1 cycle / day (Daily Batch).`);
+    });
+
+    btnFreq4h.addEventListener('click', () => {
+      state.triggerFreq = '4h';
+      btnFreq4h.classList.add('active');
+      btnFreqDaily.classList.remove('active');
+      document.getElementById('timeVal').innerHTML = '60.5 <span>秒 / 日 (6回実行)</span>';
+      addLog(`Frequency updated: Every 4 Hours (CE API call x6).`);
+    });
+
+    // 視点切り替え
+    const viewChips = document.querySelectorAll('.view-chip[data-view]');
+    viewChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        viewChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.viewMode = chip.dataset.view;
+        if (state.viewMode === 'topdown') {
+          state.camera.targetRotX = 0;
+          state.camera.targetRotY = 0;
+        } else {
+          state.camera.targetRotX = 25 * Math.PI / 180;
+          state.camera.targetRotY = -20 * Math.PI / 180;
+        }
+        addLog(`Camera view switched to: [${state.viewMode.toUpperCase()}].`);
+      });
+    });
+
+    document.getElementById('resetCamBtn').addEventListener('click', () => {
+      state.camera.targetRotX = 25 * Math.PI / 180;
+      state.camera.targetRotY = -20 * Math.PI / 180;
+      state.camera.zoom = 1;
+      state.camera.panX = 0;
+      state.camera.panY = 0;
+      addLog(`Camera reset to default isometric orientation.`);
+    });
+
+    // ログヘルパー
+    const logTerminal = document.getElementById('logTerminal');
+    function addLog(msg, type = '') {
+      const now = new Date();
+      const timeStr = `[${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}]`;
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      line.innerHTML = `<span class="log-time">${timeStr}</span><span class="log-msg ${type}">${msg}</span>`;
+      logTerminal.appendChild(line);
+      logTerminal.scrollTop = logTerminal.scrollHeight;
+    }
+
+    // 初回初期化描画
+    draw();
+  </script>
+</body>
+</html>

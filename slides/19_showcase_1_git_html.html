@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>デモ④ ガントチャート</title>
-  <link rel="stylesheet" href="../theme/slide_theme.css">
-  <script src="../theme/slide_theme.js" defer></script>
+  <title>デモ① Git操作メモのHTML化</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/slide.js"></script>
   <style>
     .slide-content {
       padding: 0.75rem 3.5rem 1.25rem 3.5rem !important;
@@ -61,35 +61,36 @@
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      font-size: 1.05rem;
-      font-weight: 600;
+      background: #f1f5f9;
       color: #0284c7;
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      padding: 0.35rem 0.85rem;
-      border-radius: 0.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.4rem;
+      padding: 0.4rem 0.85rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
       text-decoration: none;
       transition: all 0.15s ease-in-out;
       white-space: nowrap;
     }
 
     .external-btn:hover {
-      background: #e0f2fe;
-      border-color: #7dd3fc;
+      background: #e2e8f0;
+      color: #0369a1;
     }
 
     /* デモ埋め込みコンテナ */
-    .demo-iframe-container {
-      width: 100%;
+    .demo-frame-wrapper {
       flex: 1;
+      width: 100%;
+      background: #ffffff;
       border: 1.5px solid #cbd5e1;
-      border-radius: 0.75rem;
+      border-radius: 0.85rem;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
-      background: #f8fafc;
+      box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
     }
 
-    iframe.demo-iframe {
+    .demo-frame {
       width: 100%;
       height: 100%;
       border: none;
@@ -101,7 +102,7 @@
 <body>
   <div class="slide-container">
     <header class="slide-header">
-      <h1>デモ④ ガントチャート <span class="diff-badge badge-hard">難しい</span></h1>
+      <h1>デモ① Git操作メモのHTML化 <span class="diff-badge badge-super-easy">超簡単</span></h1>
       <div class="slide-logo"></div>
     </header>
 
@@ -109,17 +110,19 @@
       <!-- 注目ポイントバナー -->
       <div class="showcase-banner">
         <div class="banner-left">
-          <span class="banner-item">テキスト定義（JSON）から立ち上げるWBS</span>
-          <span class="banner-lesson">日付やタスクのテキスト編集だけで日程を即座に再編でき、稼働日数や進捗判定も自動計算</span>
+          <span class="banner-item">左: 生Markdownメモ</span>
+          <span class="banner-item">右: AI構造化HTML</span>
+          <span class="banner-lesson">💡 テキストメモから、AIが意図を汲んで見やすいリファレンスへ一瞬で昇華</span>
         </div>
-        <a href="../demos/demo_gantt_compact.html" target="_blank" rel="noopener noreferrer" class="external-btn">
-          別タブで開く ↗
+        <a href="../demos/git_tips_viewer.html" target="_blank" class="external-btn">
+          <span>別タブで開く</span>
+          <span>↗</span>
         </a>
       </div>
 
-      <!-- デモ本体 (iframe) -->
-      <div class="demo-iframe-container">
-        <iframe src="../demos/demo_gantt_compact.html" class="demo-iframe" title="作例② ガントチャートデモ"></iframe>
+      <!-- デモ埋め込みフレーム -->
+      <div class="demo-frame-wrapper">
+        <iframe src="../demos/git_tips_viewer.html" class="demo-frame" title="Git操作メモのHTML化"></iframe>
       </div>
     </main>
 

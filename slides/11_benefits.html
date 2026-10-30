@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AIに言語化させた、今回のHTMLの良いポイント</title>
-  <link rel="stylesheet" href="../theme/slide_theme.css">
-  <script src="../theme/slide_theme.js" defer></script>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/slide.js"></script>
   <style>
     .slide-content {
       padding: 1.25rem 3.5rem 1.5rem 3.5rem !important;
@@ -39,51 +39,40 @@
       border-radius: 0.3rem;
     }
 
-    /* メリットカードグリッド（上段3、下段2） */
+    /* メリットカード縦5段リスト */
     .cards-container {
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    .cards-row {
-      display: grid;
-      gap: 1.25rem;
-    }
-
-    .row-top {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .row-bottom {
-      grid-template-columns: repeat(2, 1fr);
+      gap: 0.85rem;
     }
 
     .benefit-card {
       background: #ffffff;
       border: 1.5px solid #e2e8f0;
-      border-radius: 0.85rem;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+      border-radius: 0.75rem;
+      padding: 1.1rem 1.75rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
       display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      align-items: center;
+      gap: 2.5rem;
     }
 
     .card-title {
-      font-size: 1.85rem;
+      font-size: 1.65rem;
       font-weight: 700;
       color: #0f172a;
       letter-spacing: -0.01em;
-      line-height: 1.3;
-      text-wrap: pretty;
+      white-space: nowrap;
+      min-width: 440px;
+      margin: 0;
     }
 
     .card-body {
-      font-size: 1.5rem;
+      font-size: 1.35rem;
       font-weight: 500;
       color: #475569;
       line-height: 1.5;
+      margin: 0;
       text-wrap: pretty;
     }
   </style>
@@ -103,47 +92,31 @@
         <span>AIによるドキュメント再構成の視点（※ レイアウトの見やすさやデザインの好みには個人差があります）</span>
       </div>
 
-      <!-- 5つのポイントグリッド -->
+      <!-- 5つのポイント縦5段並び -->
       <div class="cards-container">
-        <!-- 上段（3枚） -->
-        <div class="cards-row row-top">
-          <div class="benefit-card">
-            <h2 class="card-title">① 意思決定順に再構成</h2>
-            <p class="card-body">
-              末尾にあった検討事項を最上部に引き上げ、重要論点を明確化。
-            </p>
-          </div>
-
-          <div class="benefit-card">
-            <h2 class="card-title">② 現状と改善後の対比表</h2>
-            <p class="card-body">
-              散らばっていた課題と改善後の姿を、プロセス別に対比表へ整理。
-            </p>
-          </div>
-
-          <div class="benefit-card">
-            <h2 class="card-title">③ 重要数値のハイライト</h2>
-            <p class="card-body">
-              「約 $0.3 / 月」などの重要数値を強調し、一瞬でコスト感を把握可能に。
-            </p>
-          </div>
+        <div class="benefit-card">
+          <h2 class="card-title">① 意思決定順に再構成</h2>
+          <p class="card-body">検討事項を最上部へ配置し、議論の論点を明確化。</p>
         </div>
 
-        <!-- 下段（2枚） -->
-        <div class="cards-row row-bottom">
-          <div class="benefit-card">
-            <h2 class="card-title">④ 多段組（グリッド配置）による一覧性</h2>
-            <p class="card-body">
-              画面幅を活かして左右分割やグリッド配置し、縦スクロールを大幅削減。
-            </p>
-          </div>
+        <div class="benefit-card">
+          <h2 class="card-title">② 現状と改善後の対比表</h2>
+          <p class="card-body">散在していた課題と改善策を、プロセス別に対比表で整理。</p>
+        </div>
 
-          <div class="benefit-card">
-            <h2 class="card-title">⑤ 直感的なアーキテクチャ構成図</h2>
-            <p class="card-body">
-              単純な枠線テキスト図から、データの流れが視覚的に伝わる構成図へ向上。
-            </p>
-          </div>
+        <div class="benefit-card">
+          <h2 class="card-title">③ 重要数値のハイライト</h2>
+          <p class="card-body">重要数値を大きく強調し、一瞬でコスト感を把握可能に。</p>
+        </div>
+
+        <div class="benefit-card">
+          <h2 class="card-title">④ 多段組による一覧性</h2>
+          <p class="card-body">画面幅を活かしたグリッド配置で、縦スクロールを大幅削減。</p>
+        </div>
+
+        <div class="benefit-card">
+          <h2 class="card-title">⑤ 直感的なアーキテクチャ構成図</h2>
+          <p class="card-body">テキスト図から、データの流れが直感的に伝わる構成図へ刷新。</p>
         </div>
       </div>
     </main>

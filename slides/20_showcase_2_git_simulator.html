@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デモ② Gitシミュレーター</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/slide.js"></script>
+  <style>
+    .slide-content {
+      padding: 0.75rem 3.5rem 1.25rem 3.5rem !important;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow: hidden;
+    }
+
+    /* 上部の注目ポイント・メッセージバー */
+    .showcase-banner {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.6rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    }
+
+    .banner-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .banner-item {
+      display: inline-flex;
+      align-items: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #334155;
+      background: #f1f5f9;
+      padding: 0.25rem 0.65rem;
+      border-radius: 0.4rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .banner-lesson {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .external-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #f1f5f9;
+      color: #0284c7;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.4rem;
+      padding: 0.4rem 0.85rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease-in-out;
+      white-space: nowrap;
+    }
+
+    .external-btn:hover {
+      background: #e2e8f0;
+      color: #0369a1;
+    }
+
+    /* デモ埋め込みコンテナ */
+    .demo-frame-wrapper {
+      flex: 1;
+      width: 100%;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 0.85rem;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+    }
+
+    .demo-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <h1>デモ② Gitシミュレーター <span class="diff-badge badge-normal">普通</span></h1>
+      <div class="slide-logo"></div>
+    </header>
+
+    <main class="slide-content">
+      <!-- 注目ポイントバナー -->
+      <div class="showcase-banner">
+        <div class="banner-left">
+          <span class="banner-item">4領域の可視化</span>
+          <span class="banner-item">コミットグラフ動的描画</span>
+          <span class="banner-lesson">💡 「静的な図だけだと動きが分かりにくい」という気づきから、動くシミュレータへと作り込み</span>
+        </div>
+        <a href="../demos/git_simulator_viewer.html" target="_blank" class="external-btn">
+          <span>別タブで開く</span>
+          <span>↗</span>
+        </a>
+      </div>
+
+      <!-- デモ埋め込みフレーム -->
+      <div class="demo-frame-wrapper">
+        <iframe src="../demos/git_simulator_viewer.html" class="demo-frame" title="Gitシミュレーター"></iframe>
+      </div>
+    </main>
+
+    <footer class="slide-footer"></footer>
+  </div>
+</body>
+
+</html>

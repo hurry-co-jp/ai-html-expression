@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>デモ② Gitシミュレーター</title>
+  <title>デモ④ ExcelのMarkdown化</title>
   <link rel="stylesheet" href="../theme/slide_theme.css">
   <script src="../theme/slide_theme.js" defer></script>
   <style>
@@ -61,36 +61,35 @@
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      background: #f1f5f9;
-      color: #0284c7;
-      border: 1px solid #cbd5e1;
-      border-radius: 0.4rem;
-      padding: 0.4rem 0.85rem;
       font-size: 1.05rem;
-      font-weight: 700;
-      cursor: pointer;
+      font-weight: 600;
+      color: #0284c7;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.5rem;
       text-decoration: none;
       transition: all 0.15s ease-in-out;
       white-space: nowrap;
     }
 
     .external-btn:hover {
-      background: #e2e8f0;
-      color: #0369a1;
+      background: #e0f2fe;
+      border-color: #7dd3fc;
     }
 
     /* デモ埋め込みコンテナ */
-    .demo-frame-wrapper {
-      flex: 1;
+    .demo-iframe-container {
       width: 100%;
-      background: #ffffff;
+      flex: 1;
       border: 1.5px solid #cbd5e1;
-      border-radius: 0.85rem;
+      border-radius: 0.75rem;
       overflow: hidden;
-      box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      background: #f8fafc;
     }
 
-    .demo-frame {
+    iframe.demo-iframe {
       width: 100%;
       height: 100%;
       border: none;
@@ -102,7 +101,7 @@
 <body>
   <div class="slide-container">
     <header class="slide-header">
-      <h1>デモ② Gitシミュレーター <span class="diff-badge badge-normal">普通</span></h1>
+      <h1>デモ④ ExcelのMarkdown化</h1>
       <div class="slide-logo"></div>
     </header>
 
@@ -110,19 +109,17 @@
       <!-- 注目ポイントバナー -->
       <div class="showcase-banner">
         <div class="banner-left">
-          <span class="banner-item">4領域の可視化</span>
-          <span class="banner-item">コミットグラフ動的描画</span>
-          <span class="banner-lesson">💡 「静的な図だけだと動きが分かりにくい」という気づきから、動くシミュレータへと作り込み</span>
+          <span class="banner-item">ブラウザ完結のバイナリパース</span>
+          <span class="banner-lesson">外部サーバーとの通信を一切行わず、機密情報を含む設計書も安全にAI向けテキストへ変換できる</span>
         </div>
-        <a href="../demos/git_simulator_viewer.html" target="_blank" class="external-btn">
-          <span>別タブで開く</span>
-          <span>↗</span>
+        <a href="../demos/demo_excel_compact.html" target="_blank" rel="noopener noreferrer" class="external-btn">
+          別タブで開く ↗
         </a>
       </div>
 
-      <!-- デモ埋め込みフレーム -->
-      <div class="demo-frame-wrapper">
-        <iframe src="../demos/git_simulator_viewer.html" class="demo-frame" title="Gitシミュレーター"></iframe>
+      <!-- デモ本体 (iframe) -->
+      <div class="demo-iframe-container">
+        <iframe src="../demos/demo_excel_compact.html" class="demo-iframe" title="作例④ ExcelのMarkdown化デモ"></iframe>
       </div>
     </main>
 

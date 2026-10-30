@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>読み物：AIが生成したものを、ちょっと良くする</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/slide.js"></script>
+  <style>
+    .slide-content {
+      padding: 1.25rem 3.5rem 1.5rem 3.5rem !important;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+      overflow: hidden;
+      justify-content: flex-start;
+    }
+
+    /* 各段の共通コンテナ */
+    .section-card {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 0.85rem;
+      padding: 1.2rem 2.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .section-header {
+      border-bottom: 1.5px solid #f1f5f9;
+      padding-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+
+    /* 上段：ウィドウ対比 */
+    .widow-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.75rem;
+      align-items: stretch;
+    }
+
+    .box-bad {
+      background: #fff1f2;
+      border: 1.5px solid #fecdd3;
+      border-radius: 0.65rem;
+      padding: 0.95rem 1.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      justify-content: center;
+    }
+
+    .box-good {
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      border-radius: 0.65rem;
+      padding: 0.95rem 1.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      justify-content: center;
+    }
+
+    .tag-label {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 0.15rem 0.55rem;
+      border-radius: 0.3rem;
+      letter-spacing: 0.05em;
+    }
+
+    .tag-bad {
+      background: #e11d48;
+      color: #ffffff;
+    }
+
+    .tag-good {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    .widow-text-bad {
+      font-size: 1.45rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .widow-text-good {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+
+    /* 下段：AIあるある（BADのみを提示） */
+    .cliche-bad-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .cliche-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .card-cliche-bad {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 6px solid #0284c7;
+      border-radius: 0.5rem;
+      padding: 0.85rem 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+    }
+
+    .cliche-emoji {
+      font-size: 1.8rem;
+      flex-shrink: 0;
+    }
+
+    .cliche-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 0.15rem;
+    }
+
+    .cliche-desc {
+      font-size: 1.05rem;
+      color: #64748b;
+    }
+
+    .cliche-message {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 0.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <h1>読み物：AIが生成したものを、ちょっと良くする</h1>
+      <div class="slide-logo"></div>
+    </header>
+
+    <main class="slide-content">
+      <!-- 上段：ウィドウ（改行）のケア -->
+      <section class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">1. 微妙な改行（ウィドウ）は、言葉を推敲して1行に収める</h2>
+        </div>
+
+        <div class="widow-grid">
+          <!-- BAD：自然な折り返しで2行になってしまっている -->
+          <div class="box-bad">
+            <span class="tag-label tag-bad">BAD</span>
+            <div class="widow-text-bad">
+              今回は、HTMLでどのような表現が可能なのかについて試してみた話をします
+            </div>
+          </div>
+
+          <!-- GOOD：言葉を少し見直して綺麗に1行 -->
+          <div class="box-good">
+            <span class="tag-label tag-good">GOOD</span>
+            <div class="widow-text-good">
+              今回は、HTMLでどこまで表現できるか試してみた話
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 下段：AIあるある表現の回避（BAD例のみを提示） -->
+      <section class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">2. 安易な「AIあるある表現」を避ける（左ボーダー・3分割・絵文字）</h2>
+        </div>
+
+        <div class="cliche-bad-wrapper">
+          <span class="tag-label tag-bad">よくあるAIのテンプレ</span>
+
+          <div class="cliche-cards-grid">
+            <div class="card-cliche-bad">
+              <span class="cliche-emoji">🚀</span>
+              <div>
+                <div class="cliche-title">スピーディーな開発</div>
+                <div class="cliche-desc">短期間でプロトタイプ作成</div>
+              </div>
+            </div>
+
+            <div class="card-cliche-bad">
+              <span class="cliche-emoji">💡</span>
+              <div>
+                <div class="cliche-title">柔軟な設計</div>
+                <div class="cliche-desc">多様な要件に即座に対応</div>
+              </div>
+            </div>
+
+            <div class="card-cliche-bad">
+              <span class="cliche-emoji">⚙️</span>
+              <div>
+                <div class="cliche-title">運用の自動化</div>
+                <div class="cliche-desc">定型作業を削減し効率化</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cliche-message">
+            <div>いろいろ作って実体験として感覚を磨いていくのが大事</div>
+            <div>「3分割で横に並べる表現は禁止とします」のように制限させるだけでも意外と頑張ってくれる</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="slide-footer"></footer>
+  </div>
+</body>
+</html>

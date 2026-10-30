@@ -66,44 +66,48 @@ export const slideDeckConfig = {
     "section": "読み物：フロント技術の知識があるほど、表現力を高められる"
   },
   {
-    "url": "slides/16_showcase_list.html",
+    "url": "slides/16_note_prompt_tips.html",
+    "section": "読み物：AIが生成したものを、ちょっと良くするコツ"
+  },
+  {
+    "url": "slides/17_showcase_list.html",
     "section": "紹介するデモラインナップ"
   },
   {
-    "url": "slides/17_demo_notice.html",
+    "url": "slides/18_demo_notice.html",
     "section": "デモ実演の前に"
   },
   {
-    "url": "slides/18_showcase_1_git_html.html",
+    "url": "slides/19_showcase_1_git_html.html",
     "section": "デモ① Git操作メモのHTML化"
   },
   {
-    "url": "slides/19_showcase_2_git_simulator.html",
+    "url": "slides/20_showcase_2_git_simulator.html",
     "section": "デモ② Gitシミュレーター"
   },
   {
-    "url": "slides/20_showcase_3_survey.html",
+    "url": "slides/21_showcase_3_survey.html",
     "section": "デモ③ Formsで集計したアンケートの可視化"
   },
   {
-    "url": "slides/21_showcase_4_gantt.html",
+    "url": "slides/22_showcase_4_gantt.html",
     "section": "デモ④ ガントチャート"
   },
   {
-    "url": "slides/22_showcase_5_aws.html",
+    "url": "slides/23_showcase_5_aws.html",
     "section": "デモ⑤ AWSの構成図"
   },
   {
-    "url": "slides/23_conclusion.html",
+    "url": "slides/24_conclusion.html",
     "section": "まとめ"
   },
   {
-    "url": "slides/24_department.html",
+    "url": "slides/25_department.html",
     "section": "活動紹介スライド"
   },
   {
-    "url": "slides/25_ending.html",
-    "section": "エンディング"
+    "url": "slides/26_ending.html",
+    "section": "テンプレ：エンディング"
   }
 ]
 };

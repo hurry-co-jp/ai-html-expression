@@ -5,10 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>読み物：フロント技術の知識があるほど、表現力を高められる</title>
-  <link rel="stylesheet" href="../theme/slide_theme.css">
-  <script src="../theme/slide_theme.js" defer></script>
-  <script src="../theme/canvas_theme.js"></script>
-  <style>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/slide.js"></script>
+    <style>
     .slide-content {
       padding: 0 !important;
       overflow: hidden;
@@ -75,29 +74,12 @@
       ctx.restore();
     }
 
-    function drawWrapText(ctx, text, x, startY, maxWidth, lineHeight, font, color) {
+    function drawLines(ctx, lines, x, startY, lineHeight, font, color) {
       ctx.save();
       ctx.font = font;
       ctx.fillStyle = color;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-
-      const lines = [];
-      let currentLine = '';
-
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const testLine = currentLine + char;
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && i > 0) {
-          lines.push(currentLine);
-          currentLine = char;
-        } else {
-          currentLine = testLine;
-        }
-      }
-      if (currentLine) lines.push(currentLine);
-
       lines.forEach((line, index) => {
         ctx.fillText(line, x, startY + index * lineHeight);
       });
@@ -130,22 +112,22 @@
       const levels = [
         {
           lv: 'Lv.1 JS不使用のHTML',
-          desc: 'CSS装飾のみ。TeamsやSharePoint上でもそのまま安全に開ける最も手軽な形式。'
+          lines: ['CSS装飾のみ。TeamsやSharePointでも、', 'そのまま安全に開ける最も手軽な形式。']
         },
         {
           lv: 'Lv.2 外部データを扱わないHTML',
-          desc: 'サーバー不要。ダブルクリックだけで動き、手軽にインタラクティブな操作を実現。'
+          lines: ['サーバー不要。ダブルクリックで動作し、', '手軽にインタラクティブな操作を実現。']
         },
         {
           lv: 'Lv.3 外部データを扱うHTML',
-          desc: 'CORS回避のためローカルサーバー必須（python -m http.server 等）。データ（JSON等）と表示を完全に分離可能。'
+          lines: ['ローカルサーバーの起動が必須。', 'データと表示を完全に分離可能。']
         }
       ];
 
       levels.forEach((l, idx) => {
         const itemY = topY + 120 + idx * 178;
         drawText(ctx, l.lv, col1X + 35, itemY, 'bold 30px sans-serif', '#d97706');
-        drawWrapText(ctx, l.desc, col1X + 35, itemY + 34, colW - 70, 36, '24px sans-serif', '#475569');
+        drawLines(ctx, l.lines, col1X + 35, itemY + 34, 36, '24px sans-serif', '#475569');
       });
 
       // ==========================================
@@ -163,26 +145,26 @@
       const techs = [
         {
           t: 'Canvas API',
-          d: 'タグではなくプログラム描画。動く構成図やカスタムグラフを自由に表現。'
+          lines: ['タグではなくプログラム描画。', '動く構成図やグラフを自由に表現。']
         },
         {
           t: 'SPA（Single Page App）',
-          d: '画面遷移なしで瞬時に表示切替。Webアプリのようなスムーズな操作感。'
+          lines: ['画面遷移なしで瞬時に表示を切り替え。', 'Webアプリのようなスムーズな操作感。']
         },
         {
           t: 'Data URI スキーム',
-          d: '画像やアイコンをBase64でHTML内に直埋め込みし、1ファイル完結で配布可能にする。'
+          lines: ['画像やアイコンをBase64で埋め込み、', '1ファイル完結で配布可能にする。']
         },
         {
           t: 'Web Storage API',
-          d: '外部DB不要でブラウザ内に自分専用の設定やメモ・進捗状態を保存。'
+          lines: ['外部DB不要でブラウザ内に保存。', '自分専用の設定や進捗状態を保持。']
         }
       ];
 
       techs.forEach((t, idx) => {
         const itemY = topY + 116 + idx * 136;
         drawText(ctx, t.t, col2X + 35, itemY, 'bold 28px sans-serif', '#0284c7');
-        drawWrapText(ctx, t.d, col2X + 35, itemY + 32, colW - 70, 34, '23px sans-serif', '#475569');
+        drawLines(ctx, t.lines, col2X + 35, itemY + 32, 34, '23px sans-serif', '#475569');
       });
 
       // ==========================================
@@ -200,22 +182,22 @@
       const advancedTechs = [
         {
           c: 'モダン開発基盤（Vite ＋ TypeScript）',
-          d: '型安全性でデータやロジックの破綻を防ぎ、待ち時間ゼロの即時反映でAIとの試行錯誤を高速化。'
+          lines: ['型安全性でデータやロジックの破綻を防ぎ、', '即時反映でAIとの試行錯誤を高速化。']
         },
         {
           c: 'CSSフレームワーク（Tailwind CSS）',
-          d: 'CSSファイルを別で作らず、HTML内に直接指定して整ったUIを一発生成。'
+          lines: ['CSSファイルを別で作らず、', 'HTML内に直接指定して整ったUIを生成。']
         },
         {
           c: 'レスポンシブ対応',
-          d: 'メディアクエリや比率維持スケーリングで、多様なモニターサイズに柔軟適応。'
+          lines: ['メディアクエリやスケーリングで、', '多様な画面サイズに柔軟に適応。']
         }
       ];
 
       advancedTechs.forEach((c, idx) => {
         const itemY = topY + 120 + idx * 178;
         drawText(ctx, c.c, col3X + 35, itemY, 'bold 28px sans-serif', '#7c3aed');
-        drawWrapText(ctx, c.d, col3X + 35, itemY + 34, colW - 70, 36, '24px sans-serif', '#475569');
+        drawLines(ctx, c.lines, col3X + 35, itemY + 34, 36, '24px sans-serif', '#475569');
       });
 
       // ==========================================
@@ -227,7 +209,7 @@
 
       drawText(
         ctx,
-        '💡 「何ができるのか」を知っているだけで、AIへの指示の解像度が劇的に上がる',
+        '「何ができるのか」を知っているだけで、AIへの指示の解像度が劇的に上がる',
         baseWidth / 2,
         bottomY + bottomH / 2,
         'bold 34px sans-serif',

@@ -1,0 +1,18 @@
+{
+  "name": "html-slide-deck",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "自己完結型HTMLスライドデッキ",
+  "scripts": {
+    "viewer": "node scripts/dev-server.js",
+    "sync": "node scripts/sync.js",
+    "check": "node scripts/check-slides.js",
+    "move": "node scripts/move.js",
+    "shift": "node scripts/shift.js",
+    "capture": "node scripts/capture-slides.js",
+    "import-builder": "node scripts/import-builder.js",
+    "export-pdf": "node scripts/export-pdf.js",
+    "dev": "node scripts/dev-server.js"
+  }
+}

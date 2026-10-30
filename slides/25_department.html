@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活動紹介スライド</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/slide.js"></script>
+  <style>
+    .full-image-slide {
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .full-image-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .full-bleed-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .image-fallback {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 1.2rem;
+      color: #64748b;
+      width: 100%;
+      height: 100%;
+      background: #f8fafc;
+    }
+
+    .fallback-badge {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 0.4rem 1.2rem;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+
+    .fallback-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #1e293b;
+    }
+
+    .fallback-path {
+      font-size: 1.1rem;
+      font-family: monospace;
+      color: #1d4ed8;
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      padding: 0.5rem 1.2rem;
+      border-radius: 0.375rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container full-image-slide">
+    <h1 class="sr-only">活動紹介スライド</h1>
+    <div class="full-image-wrapper">
+      <img src="../assets/department.png" alt="活動紹介画像" class="full-bleed-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="image-fallback" style="display: none;">
+        <span class="fallback-badge">フル画面表示</span>
+        <div class="fallback-title">活動紹介画像をここに配置</div>
+        <div class="fallback-path">assets/department.png</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

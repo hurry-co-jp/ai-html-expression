@@ -10,7 +10,7 @@
   <script src="../../../Tools/aws-diagram/diagram_renderer.js"></script>
   <style>
     html {
-      font-size: 24px;
+      font-size: 19px;
     }
 
     body {
@@ -706,7 +706,16 @@
       // データを読み込んで描画（初期は選択なしで全体表示）
       renderer.setData(COST_DIAGRAM_DATA, null);
       renderer.selectedNodeId = null;
-      renderer.render();
+
+      // 画面幅に合わせて初期スケールを約75%に調整し全体を収める
+      renderer.resetView = function () {
+        this.scale = 0.75;
+        this.offsetX = 15;
+        this.offsetY = 20;
+        this._updateZoomDisplay();
+        this.render();
+      };
+      renderer.resetView();
     });
   </script>
 </body>

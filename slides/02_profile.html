@@ -1,27 +1,23 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>自己紹介</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/slide.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
+    .full-image-slide {
       padding: 0;
-    }
-
-    html,
-    body {
+      margin: 0;
       width: 100%;
       height: 100%;
+      position: relative;
       overflow: hidden;
-      background: #f8fafc;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #ffffff;
     }
 
-    .slide-wrapper {
+    .full-image-wrapper {
       width: 100%;
       height: 100%;
       display: flex;
@@ -30,61 +26,77 @@
       position: relative;
     }
 
-    .slide-img {
+    .full-bleed-image {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: block;
     }
 
-    .placeholder {
-      display: none;
-      border: 2.5px dashed #cbd5e1;
-      border-radius: 1.25rem;
-      padding: 4rem 6rem;
+    .image-fallback {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      background: #ffffff;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-    }
-
-    .placeholder-title {
-      font-size: 2.4rem;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 1rem;
-      letter-spacing: -0.01em;
-    }
-
-    .placeholder-desc {
-      font-size: 1.4rem;
+      gap: 1.2rem;
       color: #64748b;
-      margin-bottom: 1.5rem;
+      width: 100%;
+      height: 100%;
+      background: #f8fafc;
     }
 
-    .placeholder-path {
+    .fallback-badge {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 0.4rem 1.2rem;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+
+    .fallback-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #1e293b;
+    }
+
+    .fallback-path {
+      font-size: 1.1rem;
       font-family: monospace;
-      font-size: 1.3rem;
-      color: #0284c7;
-      background: #f1f5f9;
-      padding: 0.6rem 1.4rem;
-      border-radius: 0.5rem;
-      border: 1px solid #e2e8f0;
-      display: inline-block;
-      font-weight: 600;
+      color: #1d4ed8;
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      padding: 0.5rem 1.2rem;
+      border-radius: 0.375rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
   </style>
 </head>
-
 <body>
-  <div class="slide-wrapper">
-    <img src="../theme/profile.png" alt="自己紹介スライド" class="slide-img"
-      onerror="this.style.display='none'; document.getElementById('ph').style.display='block';">
-    <div id="ph" class="placeholder">
-      <div class="placeholder-title">👤 自己紹介スライド</div>
-      <div class="placeholder-desc">以下のパスに画像を配置すると自動的に全画面表示されます</div>
-      <div class="placeholder-path">theme/profile.png</div>
+  <div class="slide-container full-image-slide">
+    <h1 class="sr-only">自己紹介</h1>
+    <div class="full-image-wrapper">
+      <img src="../assets/profile.png" alt="自己紹介画像" class="full-bleed-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="image-fallback" style="display: none;">
+        <span class="fallback-badge">フル画面表示</span>
+        <div class="fallback-title">自己紹介画像をここに配置</div>
+        <div class="fallback-path">assets/profile.png</div>
+      </div>
     </div>
   </div>
 </body>
-
 </html>

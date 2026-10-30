@@ -1,8 +1,8 @@
 /* ===================================================
-   RAG Slide Deck Balanced Theme CSS (slide_theme.css)
+   スライド基盤スタイル (base.css)
+   ※ 本ファイルはシステム共通の骨格・計算ルールです。
+   ※ 原則として直接編集せず、custom.css 等で上書きしてください。
    =================================================== */
-
-@import '../slide_config.css';
 
 * {
   box-sizing: border-box;
@@ -14,7 +14,8 @@ html {
   font-size: 20px;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -39,7 +40,7 @@ html, body {
 
 /* 統一ヘッダー */
 .slide-header {
-  padding: 1.75rem 3.5rem 1rem 3.5rem;
+  padding: 1.75rem 5rem 1rem 5rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -56,67 +57,11 @@ html, body {
   align-items: center;
 }
 
-.slide-tag {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #0284c7;
-  background: #e0f2fe;
-  padding: 0.3rem 1rem;
-  border-radius: 9999px;
-  letter-spacing: 0.05em;
-  -webkit-print-color-adjust: exact !important;
-  print-color-adjust: exact !important;
-}
-
-/* 難易度バッジ */
-.diff-badge {
-  font-size: 1.25rem;
-  font-weight: 700;
-  padding: 0.3rem 1.05rem;
-  border-radius: 9999px;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-  margin-left: 1.25rem;
-  line-height: 1.4;
-  -webkit-print-color-adjust: exact !important;
-  print-color-adjust: exact !important;
-}
-
-.badge-super-easy {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1.5px solid #a7f3d0;
-}
-
-.badge-normal {
-  background: #f0f9ff;
-  color: #0284c7;
-  border: 1.5px solid #bae6fd;
-}
-
-.badge-easy {
-  background: #f0fdf4;
-  color: #059669;
-  border: 1.5px solid #bbf7d0;
-}
-
-.badge-hard {
-  background: #fffbeb;
-  color: #d97706;
-  border: 1.5px solid #fde68a;
-}
-
-.badge-very-hard {
-  background: #fff1f2;
-  color: #e11d48;
-  border: 1.5px solid #fecdd3;
-}
-
 /* 右上ロゴ画像 (slide_config.cssの --logo-image を参照) */
 .slide-logo {
   width: 9rem;
   height: 2.8rem;
-  background-image: var(--logo-image), url('logo.png');
+  background-image: var(--logo-image), url('../assets/logo.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: right center;
@@ -125,14 +70,53 @@ html, body {
   print-color-adjust: exact !important;
 }
 
-/* メインコンテンツ */
-.slide-content {
+/* メインコンテンツ枠 */
+.slide-content,
+.slide-body {
   flex: 1;
-  padding: 2rem 3.5rem;
+  padding: 1.5rem 5rem 1.75rem 5rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+/* メイン領域のタイポグラフィ基底（各HTMLで上書き可能） */
+.slide-content h2,
+.slide-body h2 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.slide-content h3,
+.slide-body h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+  line-height: 1.35;
+}
+
+.slide-content strong,
+.slide-body strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.slide-content code,
+.slide-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
 }
 
 /* 箇条書き 1段目 (親項目) */
@@ -140,28 +124,28 @@ html, body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
   padding-left: 0.25rem;
 }
 
-.bullet-list > li {
-  font-size: 2.2rem;
+.bullet-list>li {
+  font-size: 1.75rem;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.35;
   position: relative;
-  padding-left: 2.6rem;
+  padding-left: 2.4rem;
   letter-spacing: -0.01em;
 }
 
-.bullet-list > li::before {
+.bullet-list>li::before {
   content: "•";
   position: absolute;
   left: 0;
   color: #0284c7;
-  font-size: 3.0rem;
+  font-size: 2.4rem;
   line-height: 1;
-  top: -0.15rem;
+  top: -0.12rem;
 }
 
 /* 箇条書き 2段目 (子項目) */
@@ -169,18 +153,18 @@ html, body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
   padding-left: 0.25rem;
 }
 
 .sub-list li {
-  font-size: 1.9rem;
+  font-size: 1.35rem;
   font-weight: 400;
   color: #475569;
   line-height: 1.45;
   position: relative;
-  padding-left: 2.2rem;
+  padding-left: 2rem;
 }
 
 .sub-list li::before {
@@ -188,9 +172,9 @@ html, body {
   position: absolute;
   left: 0;
   color: #0284c7;
-  font-size: 2.2rem;
+  font-size: 1.6rem;
   font-weight: bold;
-  top: -0.15rem;
+  top: -0.12rem;
 }
 
 .sub-list li strong {
@@ -198,26 +182,9 @@ html, body {
   color: #0f172a;
 }
 
-/* 注意事項・アラート */
-.notice-box {
-  background: #f0f9ff;
-  border: 1.5px solid #0284c7;
-  border-radius: 0.75rem;
-  padding: 1.5rem 2rem;
-  font-size: 1.9rem;
-  color: #0f172a;
-  line-height: 1.45;
-  font-weight: 500;
-}
-
-.notice-box strong {
-  color: #0284c7;
-  font-weight: 700;
-}
-
 /* 統一フッター */
 .slide-footer {
-  padding: 0.875rem 3.5rem 1.25rem 3.5rem;
+  padding: 0.875rem 5rem 1.25rem 5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -237,21 +204,3 @@ html, body {
   font-weight: 700;
   color: #0284c7;
 }
-
-/* 2カラムレイアウト */
-.two-column-layout {
-  display: flex;
-  gap: 2rem;
-  align-items: stretch;
-  flex: 1;
-}
-
-.column-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-
-

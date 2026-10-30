@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>そもそもMarkdownとは？</title>
-  <link rel="stylesheet" href="../theme/slide_theme.css">
-  <script src="../theme/slide_theme.js" defer></script>
-  <script src="../theme/canvas_theme.js"></script>
-  <style>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/slide.js"></script>
+    <style>
     .slide-content {
       padding: 0 !important;
       overflow: hidden;
@@ -183,7 +182,9 @@
         ctx.fillText('・S3に保存して専用HTMLで一覧表示', innerX, ly + 104);
 
         const btmY = ly + 185;
-        wrapText(ctx, '相談事項：情報のアクセス制限とセキュリティについて確認したい', innerX, btmY, w - 76, 38);
+        ctx.fillText('相談事項：', innerX, btmY);
+        ctx.fillText('アクセス制限とセキュリティ', innerX, btmY + 38);
+        ctx.fillText('について確認したい', innerX, btmY + 76);
 
       } else if (type === 'markdown') {
         ctx.font = 'bold 28px monospace';
@@ -200,7 +201,7 @@
         const mBtmY = ly + 185;
         ctx.font = '23px monospace';
         ctx.fillStyle = '#0284c7';
-        ctx.fillText('相談事項：情報の', innerX, mBtmY);
+        ctx.fillText('相談事項：', innerX, mBtmY);
         ctx.fillText('**アクセス制限とセキュリティ**', innerX, mBtmY + 38);
         ctx.fillText('について確認したい', innerX, mBtmY + 76);
 
@@ -220,7 +221,7 @@
         ctx.fillText('</ul>', innerX, ly + 152);
 
         const hBtmY = ly + 215;
-        ctx.fillText('<p>相談事項：情報の', innerX, hBtmY);
+        ctx.fillText('<p>相談事項：', innerX, hBtmY);
         ctx.fillText('  <strong>アクセス制限とセキュリティ</strong>', innerX, hBtmY + 38);
         ctx.fillText('  について確認したい</p>', innerX, hBtmY + 76);
       }

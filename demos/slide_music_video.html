@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>FORM / BEAT — AI × HTML・P1〜P7 ミュージックビデオ</title>
+  <style>
+    :root { color-scheme: light; font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif; color: #172436; background: #f4f5f7; --blue: #3055e9; --line: #dfe4eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button { color: inherit; cursor: pointer; }
+    button:focus-visible, a:focus-visible, input:focus-visible, canvas:focus-visible { outline: 3px solid #3055e9; outline-offset: 4px; }
+    button:disabled { opacity: .45; cursor: wait; }
+    [hidden] { display: none !important; }
+    .player { display: flex; flex-direction: column; height: 100svh; min-height: 440px; padding: 0 32px; max-width: 2240px; margin: auto; }
+    .masthead { height: 70px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .identity { display: flex; align-items: center; gap: 15px; }
+    .mark { width: 30px; height: 30px; border: 2px solid var(--blue); border-radius: 50%; position: relative; }
+    .mark::after { content: ""; position: absolute; top: 4px; bottom: 4px; left: 12px; width: 2px; background: #ec744e; transform: rotate(28deg); }
+    h1 { margin: 0; font: 700 17px Consolas, "Liberation Mono", monospace; letter-spacing: 2px; }
+    .edition { margin-top: 5px; font-size: 10px; color: #68758b; }
+    .masthead-right { display: flex; align-items: center; gap: 22px; font: 10px Consolas, monospace; letter-spacing: 1px; color: #68758b; }
+    .live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #e17b57; margin-right: 8px; }
+    .source { font-size: 10px; color: #68758b; text-underline-offset: 4px; }
+    .screen { flex: 1; min-height: 0; position: relative; background: #fff; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; box-shadow: 0 15px 55px #1c304808; }
+    canvas { display: block; width: 100%; height: 100%; }
+    .start-layer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #fbfcff30; }
+    .start-button { position: absolute; top: 77%; display: flex; align-items: center; gap: 16px; padding: 15px 27px; border: 1px solid #3055e925; color: #fff; background: var(--blue); border-radius: 50px; box-shadow: 0 8px 30px #3055e92b; font-size: 13px; transition: transform .2s, box-shadow .2s; white-space: nowrap; }
+    .start-button:hover { transform: translateY(-3px); box-shadow: 0 14px 35px #3055e938; }
+    .start-button svg { width: 14px; height: 14px; fill: currentColor; }
+    .screen-note { position: absolute; right: 14px; bottom: 12px; font: 9px Consolas, monospace; color: #67778b; padding: 5px 8px; background: #ffffffd9; pointer-events: none; }
+    .transport { flex: 0 0 auto; padding: 17px 0 15px; }
+    .transport-top { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .playback-buttons { display: flex; align-items: center; gap: 12px; }
+    .control { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: #fff; transition: background .2s; }
+    .control:hover { background: #e9eefb; }
+    .control svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .control.play { width: 42px; height: 42px; background: var(--blue); color: #fff; border-color: transparent; }
+    .control.play svg { fill: currentColor; stroke: none; }
+    .time { font: 12px Consolas, monospace; color: #758095; min-width: 102px; }
+    .time strong { color: #25344b; font-weight: 500; }
+    .track-info { display: flex; align-items: center; gap: 18px; }
+    .track-name { font-size: 11px; color: #465774; }
+    .beat-meter { display: flex; gap: 4px; align-items: center; }
+    .beat-meter i { width: 5px; height: 12px; border-radius: 2px; background: #d6ddea; }
+    .beat-meter i.active { background: var(--blue); }
+    .volume { display: flex; align-items: center; gap: 8px; }
+    .volume input { width: 76px; accent-color: var(--blue); }
+    .seek { display: block; width: 100%; height: 16px; margin: 12px 0 4px; accent-color: var(--blue); cursor: pointer; }
+    .chapters { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .chapter { background: transparent; border: 0; text-align: left; color: #788398; padding: 7px 0; font-size: 10px; white-space: nowrap; }
+    .chapter[aria-current="true"] { color: var(--blue); font-weight: 700; }
+    .chapter span { font: 9px Consolas, monospace; margin-right: 6px; }
+    .status-row { display: flex; justify-content: space-between; gap: 20px; font-size: 9px; color: #7d8798; min-height: 20px; line-height: 1.6; margin-top: 8px; }
+    .status-row p { margin: 0; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .player:fullscreen { max-width: none; background: #f4f5f7; }
+    @media (max-width: 900px) {
+      .player { padding: 0 16px; }
+      .masthead { height: 62px; }
+      .masthead-right .spec { display: none; }
+      .track-name { display: none; }
+      .chapters { grid-template-columns: repeat(7, 1fr); }
+      .chapter { font-size: 9px; }
+      .chapter span { display: block; margin: 0 0 4px; }
+      .status-row .hint { display: none; }
+    }
+    @media (max-width: 560px) {
+      .player { min-height: 540px; padding: 0 10px; }
+      .masthead { height: 67px; gap: 10px; }
+      .identity { gap: 9px; }
+      h1 { font-size: 14px; letter-spacing: 1px; }
+      .edition { font-size: 8px; }
+      .source { font-size: 9px; }
+      .screen { flex: 1; min-height: 215px; }
+      .start-button { font-size: 11px; padding: 13px 21px; top: 76%; }
+      .screen-note { font-size: 8px; }
+      .transport { padding-top: 14px; }
+      .playback-buttons { gap: 7px; }
+      .time { font-size: 10px; min-width: 78px; }
+      .track-info { gap: 6px; }
+      .volume input, .beat-meter { display: none; }
+      .control { width: 31px; height: 31px; }
+      .control.play { width: 36px; height: 36px; }
+      .transport-top { gap: 8px; }
+      .chapter { font-size: 8px; }
+      .status-row { font-size: 8px; }
+    }
+    @media (max-height: 600px) and (min-width: 700px) {
+      .player { min-height: 360px; }
+      .masthead { height: 48px; }
+      .transport { padding: 8px 0; }
+      .status-row, .screen-note { display: none; }
+      .seek { margin-top: 5px; }
+      .chapter { padding: 4px 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="player" id="player">
+    <header class="masthead">
+      <div class="identity"><span class="mark" aria-hidden="true"></span><div><h1>FORM / BEAT</h1><div class="edition">AIでHTMLにどこまで表現させられるかやってみた</div></div></div>
+      <div class="masthead-right"><span class="spec"><i class="live-dot"></i>ORIGINAL SYNTH TRACK / 120 BPM / 01:04</span><a class="source" href="../index.html">元のスライド</a></div>
+    </header>
+    <main class="screen" id="screen">
+      <canvas id="film" tabindex="0" role="img" aria-label="P1〜P7の内容を音楽に同期させたモーション映像" aria-describedby="scene-description"></canvas>
+      <div class="start-layer" id="start-layer"><button class="start-button" id="start"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2l13 8-13 8z"/></svg>音楽と映像を再生<span style="opacity:.7;font-size:10px">64秒</span></button></div>
+      <div class="screen-note">P1—P7 / MOTION REINTERPRETATION</div>
+      <p class="sr-only" id="scene-description" aria-live="polite">P1 表紙。AIでHTMLにどこまで表現させられるかやってみた。</p>
+    </main>
+    <section class="transport" aria-label="映像と音楽の再生操作">
+      <div class="transport-top">
+        <div class="playback-buttons">
+          <button class="control play" id="play" aria-label="再生"><svg viewBox="0 0 20 20" aria-hidden="true"><path id="play-icon" d="M6 3l11 7-11 7z"/></svg></button>
+          <button class="control" id="restart" aria-label="最初から再生" title="最初から再生"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7a7 7 0 1 1-1 5M3 2v5h5"/></svg></button>
+          <div class="time"><strong id="elapsed">00:00</strong><span> / 01:04</span></div>
+        </div>
+        <div class="track-info">
+          <div class="beat-meter" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <span class="track-name" id="chapter-name">01 / 表紙</span>
+          <div class="volume"><button class="control" id="mute" aria-label="ミュート" aria-pressed="false" title="ミュート"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8h3l4-4v12l-4-4H3z"/><path id="sound-icon" d="M13 7q4 3 0 6M15 4q7 6 0 12"/></svg></button><input id="volume" type="range" min="0" max="100" value="55" aria-label="音量"></div>
+          <button class="control" id="fullscreen" aria-label="全画面表示" title="全画面表示"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg></button>
+        </div>
+      </div>
+      <label class="sr-only" for="seek">再生位置</label><input class="seek" id="seek" type="range" min="0" max="64" step="0.05" value="0" aria-valuetext="0分0秒 / 1分4秒">
+      <nav class="chapters" aria-label="場面へ移動">
+        <button class="chapter" data-time="0" aria-current="true"><span>P1 · 00:00</span>表紙</button>
+        <button class="chapter" data-time="8" aria-current="false"><span>P2 · 00:08</span>自己紹介</button>
+        <button class="chapter" data-time="12" aria-current="false"><span>P3 · 00:12</span>問いかけ</button>
+        <button class="chapter" data-time="20" aria-current="false"><span>P4 · 00:20</span>目次</button>
+        <button class="chapter" data-time="28" aria-current="false"><span>P5 · 00:28</span>着想</button>
+        <button class="chapter" data-time="40" aria-current="false"><span>P6 · 00:40</span>変換</button>
+        <button class="chapter" data-time="52" aria-current="false"><span>P7 · 00:52</span>プレビュー</button>
+      </nav>
+      <div class="status-row"><p id="status" role="status">再生すると音が流れます。音量を調整してお楽しみください。</p><p class="hint">SPACE 再生・停止 / 映像にフォーカスして ← → 5秒移動</p></div>
+    </section>
+  </div>
+  <noscript><p>再生にはJavaScriptが必要です。<a href="../index.html">元のスライドを開く</a></p></noscript>
+  <script>
+    'use strict';
+    (() => {
+      const $ = id => document.getElementById(id);
+      const DURATION = 64, BPM = 120, BEAT = 60 / BPM, W = 1920, H = 1080, TAU = Math.PI * 2;
+      const C = { ink: '#172436', blue: '#3055e9', coral: '#ef7755', mint: '#28a88e', pale: '#eff3ff', muted: '#718096', line: '#dbe3ed' };
+      const FONT = '"Hiragino Sans", "Yu Gothic", Meiryo, sans-serif';
+      const MONO = 'Consolas, "Liberation Mono", monospace';
+      const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+      const mix = (a, b, t) => a + (b - a) * t;
+      const ease = v => 1 - Math.pow(1 - clamp(v), 3);
+      const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+      let minimalMotion = motionPreference.matches;
+      const chapters = [
+        { start: 0, end: 8, name: '表紙', caption: 'AIでHTMLにどこまで表現させられるかやってみた。テキストによる思考整理から、HTMLの表現へ。' },
+        { start: 8, end: 12, name: '自己紹介', caption: '自己紹介のタイトル演出。元スライドの参照画像がないため、人物情報は追加していません。' },
+        { start: 12, end: 20, name: '問いかけ', caption: 'みなさん、資料はどうやって作っていますか？ Markdown？ PowerPoint？ 今回はHTMLの表現を試してみた話。' },
+        { start: 20, end: 28, name: '目次', caption: 'Markdownとは。なぜAIでHTMLを作らせるのか。思考サイクル。やってみた感想。デモ紹介。まとめ。' },
+        { start: 28, end: 40, name: '着想', caption: 'MarkdownはHTMLの簡易記述。変換をAIに任せたら、本来のHTMLの表現をもっと活用できるのでは？' },
+        { start: 40, end: 52, name: '変換', caption: 'プレーンテキスト、Markdown、HTML。同じ内容が、簡易記法からHTMLの構造へ変わる。' },
+        { start: 52, end: 64, name: 'プレビュー', caption: 'AWSコスト自動集計の検討案を例に、Markdownの見出し・箇条書き・図が、HTMLと構成図になる様子を再現。' }
+      ];
+
+      // 曲は32小節。映像のカットも同じ拍・小節から時刻を求める。
+      const chords = [[48, 52, 55, 59], [43, 47, 50, 54], [50, 54, 57, 62], [40, 43, 47, 50]];
+      const melodies = [
+        [76, null, 79, 83, 81, 79, 76, null], [79, 76, 74, null, 76, 79, 83, 79],
+        [74, null, 79, 78, 74, 71, 74, null], [71, 74, 78, 79, 78, 74, 71, null],
+        [78, null, 81, 86, 83, 81, 78, null], [81, 78, 76, null, 78, 81, 83, 81],
+        [79, null, 83, 81, 79, 76, 74, null], [76, 79, 83, 86, 83, 79, 76, null]
+      ];
+      const score = [];
+      function event(at, type, note = 0, duration = .2, velocity = 1) { score.push({ at, type, note, duration, velocity }); }
+      for (let bar = 0; bar < 32; bar++) {
+        const at = bar * 2, chord = chords[Math.floor(bar / 2) % 4];
+        const intro = bar < 4, build = bar >= 10 && bar < 14, drop = bar >= 14 && bar < 20;
+        const breakdown = bar >= 20 && bar < 22, ending = bar >= 30;
+        chord.forEach(note => event(at, 'pad', note + 12, 2.6, intro ? .7 : .5));
+        if (!ending) {
+          for (let step = 0; step < 8; step++) {
+            if (breakdown && step % 2) continue;
+            const note = chord[[0, 1, 2, 3, 2, 1, 3, 2][step]] + 24;
+            event(at + step * .25, 'pluck', note, .28, intro ? .65 : .38);
+          }
+        }
+        if (bar >= 2 && !breakdown && !ending) {
+          for (let beat = 0; beat < 4; beat++) {
+            event(at + beat * BEAT, 'kick', 0, .28, intro ? .55 : 1);
+            if (beat % 2) event(at + beat * BEAT, 'snare', 0, .18, .8);
+            event(at + beat * BEAT + .25, 'hat', 0, .07, .45);
+          }
+          if (bar >= 4) {
+            for (let step = 0; step < 8; step++) {
+              if (step === 3 || step === 7) continue;
+              event(at + step * .25, 'bass', chord[0] - 12 + (step === 6 ? 12 : 0), .19, .7);
+            }
+          }
+          if (drop || bar >= 24) for (let step = 0; step < 16; step++) if (step % 2 === 0) event(at + step * .125, 'hat', 0, .045, .19);
+        }
+        if (bar >= 6 && !build && !breakdown && !ending) {
+          melodies[bar % 8].forEach((note, i) => {
+            if (note !== null) event(at + i * .25, 'lead', note, i === 7 ? .38 : .23, drop || bar >= 24 ? .7 : .43);
+          });
+        }
+        if (build) {
+          const interval = bar < 12 ? .5 : bar === 12 ? .25 : .125;
+          for (let t = 0; t < 2; t += interval) event(at + t, 'snare', 0, .09, .2 + (bar - 10) * .12);
+          event(at, 'riser', 0, 1.9, .3 + (bar - 10) * .1);
+        }
+        if ([0, 4, 6, 10, 14, 20, 22, 26, 30].includes(bar)) event(at, 'shimmer', 0, 1.4, .45);
+      }
+      [52, 55, 59, 64, 71, 76].forEach(note => event(60, 'pad', note, 3.8, .55));
+      [83, 79, 76].forEach((note, i) => event(60 + i * .5, 'lead', note, 1.2, .5));
+      event(60, 'kick', 0, .3, .8);
+      score.sort((a, b) => a.at - b.at);
+
+      class Soundtrack {
+        constructor() {
+          this.ctx = null; this.master = null; this.session = null; this.sources = new Set();
+          this.volume = .55; this.muted = false; this.index = 0; this.analyser = null;
+        }
+        async init() {
+          if (!this.ctx) {
+            const Audio = window.AudioContext || window.webkitAudioContext;
+            if (!Audio) throw new Error('音声合成が利用できません');
+            this.ctx = new Audio();
+            this.master = this.ctx.createGain();
+            this.master.gain.value = this.muted ? 0 : this.volume * .65;
+            const compressor = this.ctx.createDynamicsCompressor();
+            compressor.threshold.value = -19; compressor.knee.value = 14; compressor.ratio.value = 5;
+            compressor.attack.value = .006; compressor.release.value = .15;
+            this.analyser = this.ctx.createAnalyser(); this.analyser.fftSize = 256;
+            this.master.connect(compressor); compressor.connect(this.analyser); this.analyser.connect(this.ctx.destination);
+            this.spectrum = new Uint8Array(this.analyser.frequencyBinCount);
+            this.noise = this.ctx.createBuffer(1, this.ctx.sampleRate * 3, this.ctx.sampleRate);
+            const data = this.noise.getChannelData(0);
+            let seed = 571;
+            for (let i = 0; i < data.length; i++) { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; data[i] = seed / 2147483648 - 1; }
+          }
+          if (this.ctx.state !== 'running') await this.ctx.resume();
+          if (this.ctx.state !== 'running') throw new Error('音声の再生を開始できません');
+        }
+        gain(value, at, duration, destination, attack = .008) {
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(.0001, at);
+          gain.gain.exponentialRampToValueAtTime(Math.max(.0002, value), at + Math.min(attack, duration * .2));
+          gain.gain.exponentialRampToValueAtTime(.0001, at + duration);
+          gain.connect(destination);
+          return gain;
+        }
+        track(source, at, duration, cleanup = []) {
+          this.sources.add(source);
+          source.onended = () => { this.sources.delete(source); source.disconnect(); cleanup.forEach(node => node.disconnect()); };
+          source.start(at); source.stop(at + duration + .03);
+        }
+        tone(note, at, duration, volume, type = 'triangle', cutoff = 2500, detune = 0) {
+          const oscillator = this.ctx.createOscillator();
+          oscillator.type = type; oscillator.frequency.value = 440 * Math.pow(2, (note - 69) / 12); oscillator.detune.value = detune;
+          const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = cutoff;
+          const gain = this.gain(volume, at, duration, this.session.input, type === 'sine' ? .03 : .008);
+          oscillator.connect(filter); filter.connect(gain);
+          this.track(oscillator, at, duration, [filter, gain]);
+        }
+        noiseHit(at, duration, volume, frequency, type = 'highpass') {
+          const source = this.ctx.createBufferSource(); source.buffer = this.noise;
+          const filter = this.ctx.createBiquadFilter(); filter.type = type; filter.frequency.value = frequency;
+          const gain = this.gain(volume, at, duration, this.session.input);
+          source.connect(filter); filter.connect(gain);
+          this.track(source, at, duration, [filter, gain]);
+        }
+        playNote(item, when, remaining = item.duration) {
+          if (!this.session) return;
+          const at = Math.max(this.ctx.currentTime + .002, when), v = item.velocity, d = remaining;
+          if (item.type === 'kick') {
+            const oscillator = this.ctx.createOscillator(); oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(150, at); oscillator.frequency.exponentialRampToValueAtTime(44, at + .13);
+            const gain = this.gain(.72 * v, at, d, this.session.input, .004);
+            oscillator.connect(gain); this.track(oscillator, at, d, [gain]);
+          } else if (item.type === 'snare') {
+            this.noiseHit(at, d, .23 * v, 1600);
+            this.tone(50, at, .08, .11 * v, 'triangle', 1300);
+          } else if (item.type === 'hat') {
+            this.noiseHit(at, d, .13 * v, 7200);
+          } else if (item.type === 'bass') {
+            this.tone(item.note, at, d, .28 * v, 'triangle', 750);
+            this.tone(item.note, at, d, .18 * v, 'sine', 500);
+          } else if (item.type === 'pad') {
+            const oscillator = this.ctx.createOscillator(); oscillator.type = 'triangle';
+            oscillator.frequency.value = 440 * Math.pow(2, (item.note - 69) / 12);
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(.0001, at); gain.gain.linearRampToValueAtTime(.055 * v, at + Math.min(.38, d * .2));
+            gain.gain.setValueAtTime(.045 * v, at + d * .55); gain.gain.exponentialRampToValueAtTime(.0001, at + d);
+            oscillator.connect(gain); gain.connect(this.session.input); gain.connect(this.session.send);
+            this.track(oscillator, at, d, [gain]);
+          } else if (item.type === 'lead' || item.type === 'pluck') {
+            this.tone(item.note, at, d, (item.type === 'lead' ? .14 : .075) * v, 'triangle', 3200);
+            this.tone(item.note + 12, at, d * .65, .025 * v, 'sine', 4000);
+            if (item.type === 'lead') this.tone(item.note, at + .1875, d * .7, .035 * v, 'sine', 2300);
+          } else if (item.type === 'shimmer') {
+            this.noiseHit(at, d, .12 * v, 6000);
+          } else if (item.type === 'riser') {
+            const source = this.ctx.createBufferSource(); source.buffer = this.noise;
+            const filter = this.ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.Q.value = .8;
+            filter.frequency.setValueAtTime(400, at); filter.frequency.exponentialRampToValueAtTime(6500, at + d);
+            const gain = this.ctx.createGain(); gain.gain.setValueAtTime(.0001, at); gain.gain.linearRampToValueAtTime(.11 * v, at + d * .85); gain.gain.linearRampToValueAtTime(0, at + d);
+            source.connect(filter); filter.connect(gain); gain.connect(this.session.input); this.track(source, at, d, [filter, gain]);
+          }
+        }
+        begin(position) {
+          this.stop();
+          const input = this.ctx.createGain(), send = this.ctx.createGain(), delay = this.ctx.createDelay(1), feedback = this.ctx.createGain();
+          input.gain.value = 1; send.gain.value = .26; delay.delayTime.value = .375; feedback.gain.value = .25;
+          input.connect(this.master); send.connect(delay); delay.connect(feedback); feedback.connect(delay); delay.connect(input);
+          this.session = { input, send, delay, feedback };
+          this.origin = this.ctx.currentTime + .045 - position;
+          this.index = score.findIndex(item => item.at >= position - .001);
+          if (this.index < 0) this.index = score.length;
+          // シーク直後にも、その時刻で鳴っている和音を復元する。
+          score.filter(item => item.type === 'pad' && item.at < position && item.at + item.duration > position).forEach(item => this.playNote(item, this.ctx.currentTime + .045, item.at + item.duration - position));
+          const fadeStart = Math.max(this.ctx.currentTime, this.origin + 62.8);
+          input.gain.setValueAtTime(1, fadeStart); input.gain.linearRampToValueAtTime(0, this.origin + DURATION);
+          this.schedule();
+          this.timer = setInterval(() => this.schedule(), 25);
+        }
+        schedule() {
+          if (!this.session) return;
+          const now = this.ctx.currentTime, horizon = now + .18;
+          while (this.index < score.length && this.origin + score[this.index].at < horizon) {
+            const item = score[this.index++];
+            if (this.origin + item.at >= now - .035) this.playNote(item, this.origin + item.at);
+          }
+        }
+        stop() {
+          clearInterval(this.timer);
+          if (!this.ctx || !this.session) return;
+          const old = this.session, now = this.ctx.currentTime;
+          old.input.gain.cancelScheduledValues(now); old.input.gain.setTargetAtTime(0, now, .006);
+          for (const source of this.sources) { try { source.stop(now + .025); } catch {} }
+          this.sources.clear(); this.session = null;
+          setTimeout(() => Object.values(old).forEach(node => node.disconnect()), 60);
+        }
+        updateVolume() {
+          if (!this.master) return;
+          this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume * .65, this.ctx.currentTime, .015);
+        }
+        time() { return clamp(this.ctx.currentTime - this.origin, 0, DURATION); }
+      }
+      const sound = new Soundtrack();
+      const state = { playing: false, started: false, position: 0, pending: false, scene: -1, silentOrigin: 0, audioReady: false, request: 0 };
+      let frameId = null, lastPaint = -1;
+      const canvas = $('film'), ctx = canvas.getContext('2d');
+      let viewport = { w: 1, h: 1, dpr: 1 };
+      function time() {
+        if (!state.playing) return state.position;
+        return state.audioReady ? sound.time() : clamp(performance.now() / 1000 - state.silentOrigin, 0, DURATION);
+      }
+      function updatePlayUI() {
+        $('play-icon').setAttribute('d', state.playing ? 'M5 3h4v14H5zM12 3h4v14h-4z' : 'M6 3l11 7-11 7z');
+        $('play').setAttribute('aria-label', state.playing ? '一時停止' : state.position >= DURATION ? 'もう一度再生' : '再生');
+        $('start-layer').hidden = state.started;
+        $('play').disabled = state.pending; $('start').disabled = state.pending;
+      }
+      async function play() {
+        if (state.pending || state.playing) return;
+        const request = ++state.request;
+        state.pending = true; updatePlayUI();
+        try { await sound.init(); state.audioReady = true; }
+        catch { state.audioReady = false; $('status').textContent = '音声を開始できなかったため、映像のみ再生します。再生し直すと音声の開始を再試行します。'; }
+        if (request !== state.request) return;
+        state.pending = false;
+        if (state.position >= DURATION) state.position = 0;
+        if (state.audioReady) sound.begin(state.position);
+        else state.silentOrigin = performance.now() / 1000 - state.position;
+        state.playing = true; state.started = true;
+        if (state.audioReady) $('status').textContent = minimalMotion ? '動きを抑えた表示で再生中。音楽と場面の切り替えは同期します。' : '再生中 — 音楽と映像は同じ時計に同期しています。';
+        updatePlayUI(); invalidate();
+      }
+      function pause(message = '一時停止中。再生ボタンで続きから再生します。') {
+        state.request++;
+        state.position = time(); state.playing = false; state.pending = false;
+        sound.stop(); updatePlayUI(); $('status').textContent = message; invalidate();
+      }
+      function seek(position) {
+        const wasPlaying = state.playing;
+        state.position = clamp(position, 0, DURATION); state.started = true;
+        if (wasPlaying && state.position < DURATION) {
+          if (state.audioReady) sound.begin(state.position);
+          else state.silentOrigin = performance.now() / 1000 - state.position;
+        } else if (state.position >= DURATION) {
+          state.playing = false; sound.stop();
+        }
+        updatePlayUI(); invalidate();
+      }
+      $('start').addEventListener('click', play);
+      $('play').addEventListener('click', () => state.playing ? pause() : play());
+      $('restart').addEventListener('click', () => { if (state.pending) return; seek(0); if (!state.playing) play(); });
+      $('seek').addEventListener('input', event => seek(Number(event.target.value)));
+      document.querySelectorAll('.chapter').forEach(button => button.addEventListener('click', () => seek(Number(button.dataset.time))));
+      function updateMuteUI() {
+        const silent = sound.muted || sound.volume === 0;
+        $('mute').setAttribute('aria-pressed', String(silent));
+        const label = silent ? 'ミュートを解除' : 'ミュート';
+        $('mute').setAttribute('aria-label', label); $('mute').title = label;
+        $('sound-icon').setAttribute('d', silent ? 'M13 7l5 6M18 7l-5 6' : 'M13 7q4 3 0 6M15 4q7 6 0 12');
+      }
+      $('mute').addEventListener('click', () => {
+        if (sound.volume === 0) { sound.volume = .55; $('volume').value = 55; sound.muted = false; }
+        else sound.muted = !sound.muted;
+        sound.updateVolume(); updateMuteUI();
+      });
+      $('volume').addEventListener('input', event => { sound.volume = Number(event.target.value) / 100; sound.muted = false; sound.updateVolume(); updateMuteUI(); });
+      $('fullscreen').addEventListener('click', async () => {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else if ($('player').requestFullscreen) await $('player').requestFullscreen();
+          else $('status').textContent = 'このブラウザでは全画面表示を利用できません。';
+        } catch { $('status').textContent = '全画面表示を開始できませんでした。'; }
+      });
+      document.addEventListener('fullscreenchange', () => {
+        const label = document.fullscreenElement ? '全画面表示を終了' : '全画面表示';
+        $('fullscreen').setAttribute('aria-label', label); $('fullscreen').title = label;
+      });
+      document.addEventListener('keydown', event => {
+        if (event.target.closest('button, input, a') || event.repeat) return;
+        if (event.code === 'Space') { event.preventDefault(); state.playing ? pause() : play(); }
+        if (event.target === canvas && ['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); seek(time() + (event.key === 'ArrowLeft' ? -5 : 5)); }
+      });
+      document.addEventListener('visibilitychange', () => { if (document.hidden && (state.playing || state.pending)) pause('タブを離れたため一時停止しました。'); });
+      window.addEventListener('pagehide', () => { state.request++; sound.stop(); });
+      motionPreference.addEventListener('change', event => { minimalMotion = event.matches; invalidate(); });
+
+      // ここから映像。1920×1080の仮想画面を、縦横比を保って表示する。
+      function text(value, x, y, size = 48, color = C.ink, weight = 700, align = 'center', family = FONT) {
+        ctx.font = `${weight} ${size}px ${family}`; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillStyle = color; ctx.fillText(value, x, y);
+      }
+      function fitted(value, x, y, size, maxWidth, color = C.ink, weight = 800, align = 'center') {
+        ctx.font = `${weight} ${size}px ${FONT}`;
+        const measured = ctx.measureText(value).width;
+        text(value, x, y, measured > maxWidth ? size * maxWidth / measured : size, color, weight, align);
+      }
+      function rect(x, y, w, h, fill, radius = 0, stroke = null) {
+        ctx.beginPath(); ctx.roundRect(x, y, w, h, radius); ctx.fillStyle = fill; ctx.fill();
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+      }
+      function line(x1, y1, x2, y2, color, width = 2) { ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+      function circle(x, y, radius, color, fill = false, width = 2) {
+        ctx.beginPath(); ctx.arc(x, y, Math.max(0, radius), 0, TAU); ctx.lineWidth = width;
+        if (fill) { ctx.fillStyle = color; ctx.fill(); } else { ctx.strokeStyle = color; ctx.stroke(); }
+      }
+      function label(value, x, y, color = C.muted, align = 'left') { text(value, x, y, 19, color, 500, align, MONO); }
+      function transform(x, y, rotation, scale, draw) { ctx.save(); ctx.translate(x, y); ctx.rotate(rotation); ctx.scale(scale, scale); draw(); ctx.restore(); }
+      function reveal(age, delay, draw, distance = 85) {
+        const p = minimalMotion ? 1 : ease((age - delay) / .55);
+        if (p <= 0) return;
+        ctx.save(); ctx.globalAlpha *= p; ctx.translate(0, (1 - p) * distance); draw(); ctx.restore();
+      }
+      function beatPulse(t, decay = 6) { return minimalMotion ? 0 : Math.exp(-((t / BEAT) % 1) * decay); }
+      function tag(value, x, y, color = C.blue, width = 220) {
+        rect(x - width / 2, y - 28, width, 56, '#ffffffed', 28, color + '50'); text(value, x, y, 23, color, 600, 'center', MONO);
+      }
+      function backdrop(t, scene) {
+        const backgrounds = ['#f7f9ff', '#fff8f2', '#f8fafc', '#f1f5ff', '#f7f8ff', '#f7faf9', '#f7f9ff'];
+        ctx.fillStyle = backgrounds[scene]; ctx.fillRect(0, 0, W, H);
+        const mt = minimalMotion ? 0 : t, pulse = beatPulse(t);
+        const glow = ctx.createRadialGradient(1450, 360, 60, 1450, 360, 820);
+        glow.addColorStop(0, scene === 4 ? '#cdd6ff90' : '#e2e9ff70'); glow.addColorStop(1, '#ffffff00');
+        ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#8090b526';
+        for (let x = 70; x < W; x += 70) for (let y = 60; y < H; y += 70) { ctx.beginPath(); ctx.arc(x, y, 1.2, 0, TAU); ctx.fill(); }
+        if (!minimalMotion) {
+          for (let i = 0; i < 20; i++) {
+            const x = ((i * 173 + mt * (12 + i % 4 * 6)) % (W + 160)) - 80;
+            const y = 110 + (i * 181 % 860) + Math.sin(mt + i) * 18;
+            circle(x, y, 2 + pulse * (i % 4), i % 3 ? '#3055e945' : '#ef775565', true);
+          }
+        }
+        label('FORM / BEAT', 70, 57, C.ink);
+        label(`P0${scene + 1} / ${['OPENING', 'INTRODUCTION', 'QUESTION', 'TRACKLIST', 'IDEA', 'TRANSFORMATION', 'PREVIEW'][scene]}`, W - 70, 57, C.muted, 'right');
+        line(70, 89, W - 70, 89, '#1c3b6515');
+        label('AI × HTML / VISUAL EXPERIMENT', 70, H - 47, C.muted);
+        // 実際の音声スペクトルを、小さな波形として表示する。
+        if (sound.analyser && state.playing) sound.analyser.getByteFrequencyData(sound.spectrum);
+        for (let i = 0; i < 42; i++) {
+          const level = state.playing && sound.spectrum ? sound.spectrum[i * 2] / 255 : .06;
+          const height = minimalMotion ? 5 : 3 + level * 44;
+          rect(1300 + i * 10, H - 47 - height / 2, 4, height, i % 6 === 0 ? C.coral : C.blue, 2);
+        }
+        label('120 BPM', W - 70, H - 47, C.muted, 'right');
+      }
+      function orbit(t, x, y, radius, energy = 1) {
+        const mt = minimalMotion ? 0 : t;
+        for (let i = 0; i < 5; i++) {
+          ctx.save(); ctx.translate(x, y); ctx.rotate(mt * .07 + i * .55);
+          ctx.beginPath(); ctx.ellipse(0, 0, radius + i * 20, radius * (.24 + i * .08), 0, 0, TAU);
+          ctx.lineWidth = i === 2 ? 3 : 1.4; ctx.strokeStyle = [C.blue + '35', C.coral + '55', C.blue + '50', C.mint + '40', C.blue + '20'][i]; ctx.stroke();
+          for (let j = 0; j < 12 * energy; j++) {
+            const angle = j / (12 * energy) * TAU + mt * (.18 + i * .03);
+            circle(Math.cos(angle) * (radius + i * 20), Math.sin(angle) * radius * (.24 + i * .08), j % 6 ? 2 : 5, i % 2 ? C.coral : C.blue, true);
+          }
+          ctx.restore();
+        }
+      }
+      function sceneCover(t, age) {
+        const pulse = beatPulse(t), mt = minimalMotion ? 0 : t;
+        orbit(mt, 1460, 510, 240);
+        transform(1500, 480, -.16 + Math.sin(mt * .4) * .08, 1 + pulse * .03, () => {
+          rect(-165, -165, 330, 330, '#ffffffde', 45, '#c6d0f3');
+          text('</>', 0, 0, 138, C.blue, 700, 'center', MONO);
+          tag('HTML', 0, 220, C.blue, 150);
+        });
+        reveal(age, 0, () => label('TEXT BECOMES EXPRESSION.', 140, 240, C.blue));
+        reveal(age, .15, () => fitted('AIでHTMLに', 130, 390, 148, 1120, C.ink, 900, 'left'));
+        reveal(age, .5, () => fitted('どこまで', 130, 565, 162, 1050, C.blue, 900, 'left'));
+        reveal(age, 1, () => fitted('表現させられるか。', 140, 735, 92, 1140, C.ink, 800, 'left'));
+        if (age >= 4) reveal(age, 4, () => tag('やってみた。', 405, 895, C.coral, 530));
+      }
+      function sceneProfile(t, age) {
+        const mt = minimalMotion ? 0 : age;
+        orbit(mt, 470, 540, 220);
+        for (let i = 0; i < 12; i++) transform(470, 540, i * TAU / 12 + mt * .12, 1, () => rect(250, -12, 65, 24, i % 3 === 0 ? C.coral : '#a8b8ed', 12));
+        text('02', 470, 550, 215, C.blue, 500, 'center', MONO);
+        reveal(age, 0, () => label('BEFORE WE BEGIN', 910, 330, C.coral));
+        reveal(age, .1, () => text('HELLO.', 900, 485, 170, C.ink, 900, 'left', MONO));
+        reveal(age, .4, () => text('まずは、自己紹介。', 920, 660, 65, C.ink, 700, 'left'));
+        reveal(age, 1.3, () => text('今日のテーマは AI × HTML', 920, 770, 32, C.muted, 500, 'left'));
+      }
+      function sceneQuestion(t, age) {
+        const pulse = beatPulse(t);
+        const word = age < 2 ? '資料。' : age < 4 ? 'どう作る？' : 'いつもの方法、その先へ。';
+        const size = age < 2 ? 245 : age < 4 ? 220 : 108;
+        transform(960, 435, 0, 1 + pulse * .035, () => fitted(word, 0, 0, size, 1630, C.ink, 900));
+        const a = minimalMotion ? 0 : Math.sin(t) * .035;
+        if (age >= 1.5) transform(520, 730, -.08 + a, 1, () => { rect(-300, -70, 600, 140, '#e8eeff', 22); text('Markdown?', 0, 0, 65, C.blue, 700, 'center', MONO); });
+        if (age >= 2.5) transform(1380, 720, .07 - a, 1, () => { rect(-300, -70, 600, 140, '#ffede4', 22); text('PowerPoint?', 0, 0, 65, '#c96841', 700, 'center', MONO); });
+        if (age >= 5.5) reveal(age, 5.5, () => text('今回は、HTMLの表現を試してみた話。', 960, 935, 38, C.muted, 500));
+        label('HOW DO YOU MAKE YOUR DOCUMENTS?', 960, 215, C.blue, 'center');
+      }
+      const agenda = ['Markdownとは？', 'なぜAIでHTMLを作る？', 'HTML作成の思考サイクル', 'やってみた感想', '作ってみたデモ紹介', 'まとめ'];
+      function sceneAgenda(t, age) {
+        const index = Math.min(5, Math.floor(age / 1.25)), local = age - index * 1.25;
+        label('TODAY’S TRACKLIST', 150, 225, C.blue);
+        text(String(index + 1).padStart(2, '0'), 310, 490, 300, '#dce4ff', 700, 'center', MONO);
+        const shift = minimalMotion ? 0 : (1 - ease(local / .4)) * 120;
+        fitted(agenda[index], 1090 + shift, 475, 98, 1230, C.ink, 900);
+        rect(580, 605, 1130 * ease(local / 1.1), 9, C.blue, 5);
+        for (let i = 0; i < 6; i++) {
+          const x = 190 + i * 300;
+          circle(x, 850, 22, i === index ? C.blue : '#c5cfe3', i === index);
+          text(String(i + 1).padStart(2, '0'), x, 850, 17, i === index ? '#fff' : C.muted, 600, 'center', MONO);
+          if (i < 5) line(x + 35, 850, x + 265, 850, '#ccd6e8');
+        }
+      }
+      function sceneIdea(t, age) {
+        const pulse = beatPulse(t), mt = minimalMotion ? 0 : t;
+        if (age < 4) {
+          orbit(mt, 960, 540, 410, 2);
+          const entries = [{ word: 'Markdown', x: 435, color: C.ink, delay: 0 }, { word: 'AI', x: 960, color: C.coral, delay: .5 }, { word: 'HTML', x: 1485, color: C.blue, delay: 1 }];
+          entries.forEach(entry => reveal(age, entry.delay, () => transform(entry.x, 530, 0, 1 + pulse * .05, () => text(entry.word, 0, 0, entry.word === 'Markdown' ? 86 : 145, entry.color, 900, 'center', MONO))));
+          text('×', 715, 530, 80, C.muted, 400); text('×', 1195, 530, 80, C.muted, 400);
+          reveal(age, 1.7, () => text('この組み合わせで、何ができる？', 960, 800, 48, C.ink, 700));
+          label('THE IDEA / P05', 960, 260, C.blue, 'center');
+        } else if (age < 8) {
+          const local = age - 4;
+          label('MARKDOWN = A SIMPLER WAY TO WRITE HTML', 960, 240, C.blue, 'center');
+          reveal(local, 0, () => text('書いた内容を、', 960, 415, 125, C.ink, 900));
+          reveal(local, .45, () => fitted('もっと自由な表現へ。', 960, 600, 128, 1640, C.blue, 900));
+          reveal(local, 1.1, () => text('Markdownは、HTMLの簡易記述。', 960, 820, 45, C.muted, 500));
+          for (let i = 0; i < 8; i++) transform(140 + i * 240, 965, mt * .15 + i, 1, () => rect(-15, -15, 30, 30, i % 2 ? C.coral : C.blue, 5));
+        } else {
+          const local = age - 8;
+          for (let i = 0; i < 4; i++) circle(960, 530, 280 + i * 110 + pulse * 30, [C.blue + '18', C.coral + '25', C.blue + '20', C.blue + '15'][i], false, 4);
+          reveal(local, 0, () => text('変換を、', 960, 385, 145, C.ink, 900));
+          reveal(local, .45, () => transform(960, 620, 0, 1 + pulse * .04, () => text('AIに。', 0, 0, 265, C.blue, 900)));
+          reveal(local, 1.1, () => text('HTMLが持つ表現を、もっと活用できるのでは？', 960, 900, 40, C.muted, 500));
+        }
+      }
+      const rawLines = ['AWSコスト自動集計の検討案', '', '毎朝、コストを取得する', '前日との差分を計算する', 'S3に保存して画面で確認する', '', '相談事項：アクセス制限とセキュリティ'];
+      const markdownLines = ['# AWSコスト自動集計の検討案', '', '- 毎朝、コストを取得する', '- 前日との差分を計算する', '- S3に保存して画面で確認する', '', '**アクセス制限とセキュリティ**'];
+      const htmlLines = ['<h1>AWSコスト自動集計の検討案</h1>', '<ul>', '  <li>毎朝、コストを取得する</li>', '  <li>前日との差分を計算する</li>', '  <li>S3に保存して画面で確認する</li>', '</ul>', '<strong>アクセス制限とセキュリティ</strong>'];
+      function sceneTransform(t, age) {
+        const phase = Math.min(2, Math.floor(age / 4)), local = age - phase * 4;
+        const titles = ['TXT', 'Markdown', 'HTML'];
+        const lines = [rawLines, markdownLines, htmlLines][phase];
+        const colors = [C.muted, C.blue, C.mint];
+        const pulse = beatPulse(t);
+        for (let i = 0; i < 3; i++) {
+          const x = 480 + i * 480;
+          if (i > 0) line(x - 325, 230, x - 155, 230, '#c7d2e8', 3);
+          tag(titles[i], x, 230, i === phase ? colors[i] : '#93a0b2', 260);
+          if (i === phase) circle(x, 230, 55 + pulse * 15, colors[i] + '25', false, 2);
+        }
+        const slide = minimalMotion ? 0 : (1 - ease(local / .45)) * 130;
+        ctx.save(); ctx.translate(slide, 0);
+        rect(250, 340, 1420, 500, '#fff', 28, colors[phase] + '55');
+        label(['PLAIN TEXT / 思考を書き出す', 'MARKDOWN / 記号で構造を付ける', 'HTML / タグで構造を記述する'][phase], 300, 387, colors[phase]);
+        line(300, 425, 1620, 425, C.line);
+        lines.forEach((value, i) => {
+          const count = minimalMotion ? value.length : Math.floor(Math.max(0, local - i * .1) * 55);
+          label(String(i + 1).padStart(2, '0'), 305, 470 + i * 49, '#aab5c5');
+          text(value.slice(0, count), 370, 470 + i * 49, phase === 2 ? 30 : 35, i === 0 || phase === 2 ? colors[phase] : C.ink, i === 0 ? 700 : 400, 'left', MONO);
+        });
+        ctx.restore();
+        text('同じ内容が、違うかたちになる。', 960, 945, 42, C.ink, 600);
+      }
+      const previewMarkdown = ['# AWSコスト自動集計の検討案', '', '- EventBridgeで毎朝起動', '- Lambdaでコストを集計', '- S3に差分データを保存', '', '**アクセス制限を検討する**', '', '```mermaid', 'flowchart LR', '  A["EventBridge"] --> B["Lambda"]', '  B --> C["S3"]', '```'];
+      function scenePreview(t, age) {
+        if (age >= 9) {
+          const local = age - 9;
+          orbit(minimalMotion ? 0 : t, 960, 545, 370, 2);
+          reveal(local, 0, () => text('文字から、表現へ。', 960, 380, 125, C.ink, 900));
+          reveal(local, .3, () => text('AI × HTML', 960, 610, 180, C.blue, 900, 'center', MONO));
+          reveal(local, .8, () => label('P1—P7 / TO BE CONTINUED', 960, 835, C.muted, 'center'));
+          return;
+        }
+        text('書いたものが、見えるものになる。', 960, 200, 65, C.ink, 800);
+        rect(110, 310, 820, 615, '#f0f4fa', 24, '#d5deec');
+        rect(990, 310, 820, 615, '#fff', 24, '#c9d5f3');
+        label('MARKDOWN', 150, 355, C.muted); label('HTML + MERMAID', 1030, 355, C.blue);
+        line(150, 390, 890, 390, '#d5deec'); line(1030, 390, 1770, 390, '#e2e8f2');
+        const active = age < 2.5 ? 0 : age < 4.5 ? 1 : age < 6.5 ? 2 : 3;
+        const highlight = [[0, 1], [2, 5], [6, 7], [8, 13]][active];
+        rect(138, 414 + highlight[0] * 36, 764, (highlight[1] - highlight[0]) * 36, '#dde7ff', 7);
+        previewMarkdown.forEach((value, i) => text(value, 160, 433 + i * 36, 24, i === 0 || i >= 8 ? C.blue : C.ink, i === 0 ? 700 : 400, 'left', MONO));
+        const p = minimalMotion ? 1 : ease(age / 1.5);
+        ctx.save(); ctx.globalAlpha = p;
+        fitted('AWSコスト自動集計の検討案', 1035, 450, 43, 725, C.ink, 800, 'left');
+        ctx.restore();
+        const bullets = ['EventBridgeで毎朝起動', 'Lambdaでコストを集計', 'S3に差分データを保存'];
+        bullets.forEach((value, i) => reveal(age, 1.6 + i * .4, () => { circle(1050, 535 + i * 56, 5, C.blue, true); text(value, 1075, 535 + i * 56, 30, C.ink, 400, 'left'); }, 25));
+        reveal(age, 4.2, () => { rect(1035, 710, 720, 63, '#fff0e8', 12); text('アクセス制限を検討する', 1060, 741, 29, '#b05d3e', 700, 'left'); }, 20);
+        if (age >= 5.8) {
+          const q = ease((age - 5.8) / .7);
+          ctx.save(); ctx.globalAlpha = q;
+          ['EventBridge', 'Lambda', 'S3'].forEach((name, i) => {
+            const x = 1140 + i * 250;
+            if (i) { line(x - 145, 840, x - 105, 840, C.blue, 3); line(x - 116, 832, x - 105, 840, C.blue, 3); line(x - 116, 848, x - 105, 840, C.blue, 3); }
+            rect(x - 100, 807, 200, 66, '#edf2ff', 12, '#b9c9f7'); text(name, x, 840, 24, C.blue, 600, 'center', MONO);
+          });
+          ctx.restore();
+        }
+        if (!minimalMotion) {
+          const f = (t * 1.2) % 1;
+          circle(mix(935, 985, f), 590, 4 + Math.sin(f * Math.PI) * 4, C.blue, true);
+        }
+      }
+      const painters = [sceneCover, sceneProfile, sceneQuestion, sceneAgenda, sceneIdea, sceneTransform, scenePreview];
+      function draw(t) {
+        const nextScene = chapters.findIndex(chapter => t < chapter.end);
+        const sceneIndex = nextScene < 0 ? 6 : nextScene;
+        const scene = chapters[sceneIndex], age = t - scene.start;
+        const { w, h, dpr } = viewport;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#f9faff'; ctx.fillRect(0, 0, w, h);
+        const scale = Math.min(w / W, h / H);
+        ctx.save(); ctx.translate((w - W * scale) / 2, (h - H * scale) / 2); ctx.scale(scale, scale);
+        ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+        backdrop(t, sceneIndex);
+        const effectiveAge = !state.started && sceneIndex === 0 ? 3 : age;
+        painters[sceneIndex](t, effectiveAge);
+        // 短い斜めのワイプで拍の境界をつなぐ。白黒の点滅は使わない。
+        if (!minimalMotion && state.started && age < .32 && sceneIndex > 0) {
+          const p = age / .32;
+          ctx.save(); ctx.translate(mix(-700, 2400, p), 0); ctx.transform(1, 0, -.3, 1, 0, 0);
+          rect(0, 0, 520, H, '#dce5ff'); rect(520, 0, 42, H, C.coral); ctx.restore();
+        }
+        ctx.restore();
+        if (sceneIndex !== state.scene) {
+          state.scene = sceneIndex;
+          $('chapter-name').textContent = `0${sceneIndex + 1} / ${scene.name}`;
+          $('scene-description').textContent = `P${sceneIndex + 1} ${scene.name}。${scene.caption}`;
+          document.querySelectorAll('.chapter').forEach((button, index) => button.setAttribute('aria-current', String(index === sceneIndex)));
+        }
+        const sec = Math.floor(t);
+        $('elapsed').textContent = `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+        $('seek').value = t;
+        $('seek').setAttribute('aria-valuetext', `${Math.floor(sec / 60)}分${sec % 60}秒 / 1分4秒`);
+        document.querySelectorAll('.beat-meter i').forEach((dot, index) => dot.classList.toggle('active', state.playing && index === Math.floor(t / BEAT) % 4));
+      }
+      function invalidate() { if (frameId === null) frameId = requestAnimationFrame(frame); }
+      function frame(timestamp) {
+        frameId = null;
+        let t = time();
+        if (t >= DURATION && state.playing) {
+          state.position = DURATION; state.playing = false; sound.stop(); updatePlayUI();
+          $('status').textContent = '再生が終わりました。再生ボタンでもう一度、チャプターから各場面へ戻れます。';
+        }
+        if (!minimalMotion || !state.playing || timestamp - lastPaint >= 120) { draw(t); lastPaint = timestamp; }
+        if (state.playing) invalidate();
+      }
+      function resize() {
+        const box = canvas.getBoundingClientRect();
+        viewport = { w: box.width, h: box.height, dpr: Math.min(devicePixelRatio || 1, 2) };
+        canvas.width = Math.round(viewport.w * viewport.dpr); canvas.height = Math.round(viewport.h * viewport.dpr); invalidate();
+      }
+      new ResizeObserver(resize).observe($('screen'));
+      resize(); updatePlayUI();
+    })();
+  </script>
+</body>
+</html>

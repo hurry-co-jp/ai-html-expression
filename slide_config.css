@@ -8,7 +8,7 @@
   /* フッター左下に表示する著作権表記 */
   --copyright-text: "© 2026 Your Organization";
   /* 全スライド数（分母） */
-  --total-slides: "26";
+  --total-slides: "27";
   /* true: 分母を表示 ("2 / 6"), false: 分母を非表示 ("2" のみ) */
   --show-total-slides: true;
 }
